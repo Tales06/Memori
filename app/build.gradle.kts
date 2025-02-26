@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
     kotlin("plugin.serialization") version "2.0.21"
+    id("kotlin-kapt")
 }
 
 android {
@@ -82,9 +83,28 @@ dependencies {
     // Feature module support for Fragments
     implementation("androidx.navigation:navigation-dynamic-features-fragment:$nav_version")
 
+    implementation("androidx.compose.material:material-icons-extended:1.7.6")
+
+
     // Testing Navigation
     androidTestImplementation("androidx.navigation:navigation-testing:$nav_version")
 
     // JSON serialization library, works with the Kotlin serialization plugin
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+
+    implementation ("androidx.lifecycle:lifecycle-runtime-compose:2.8.7") // Usa la versione più recente
+    implementation( "androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
+    implementation ("androidx.room:room-ktx:2.5.2")
+
+    implementation("androidx.compose.material3:material3:1.4.0-alpha07")
+    implementation("io.coil-kt:coil-compose:2.0.0")
+
+
+
 }
