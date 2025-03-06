@@ -37,13 +37,12 @@ fun NoteCard(notes: List<NotesEntity>, navController: NavController){
             modifier = Modifier.fillMaxSize()
         ){
             items(notes) {note ->
-                val resIdImg = context.resources.getIdentifier(note.image, "drawable", context.packageName)
-                val painter = if(resIdImg != 0){
-                    painterResource(id = resIdImg)
+                val resIdImg = if(!note.image.isNullOrBlank()){
+                    context.resources.getIdentifier(note.image, "drawable", context.packageName)
                 } else {
-                    painterResource(id = R.drawable.wallpaper_1)
+                    0
                 }
-                Card(
+                    Card(
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier.padding(8.dp).graphicsLayer { alpha = 0.99f }.size(200.dp),
                     onClick = {
@@ -55,12 +54,15 @@ fun NoteCard(notes: List<NotesEntity>, navController: NavController){
 
                 ) {
                     Box{
-                        Image(
-                            painter = painter,
-                            contentDescription = "Note image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize().heightIn(150.dp)
-                        )
+                        if(resIdImg != 0){
+                            Image(
+                                painter = painterResource(id = resIdImg),
+                                contentDescription = "Note image",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize().heightIn(150.dp)
+                            )
+                        }
+
 
                         Column(
                             modifier = Modifier.padding(16.dp)

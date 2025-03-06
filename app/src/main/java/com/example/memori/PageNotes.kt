@@ -132,7 +132,7 @@ fun ScreenNotes(navController: NavHostController){
                             favorite = !favorite
                             coroutineScope.launch {
                                 delay(500)
-                                saveNotes(db, noteId, title, text, favorite, image) {id -> noteId = id}
+                                saveNotes(db, noteId, title, text, favorite) {id -> noteId = id}
                             }
 
                         }){
@@ -190,8 +190,9 @@ fun ScreenNotes(navController: NavHostController){
                     value = title,
                     onValueChange = {
                         newText -> title = newText
+
                         coroutineScope.launch {
-                            saveNotes(db, noteId, title, text, favorite, image) {id -> noteId = id}
+                            saveNotes(db, noteId, title, text, favorite) {id -> noteId = id}
                         }
                     },
                     placeholder = { Text(
@@ -229,7 +230,7 @@ fun ScreenNotes(navController: NavHostController){
                     onValueChange = {
                         newText -> text = newText
                         coroutineScope.launch {
-                            saveNotes(db, noteId, title, text, favorite, image) {id -> noteId = id}
+                            saveNotes(db, noteId, title, text, favorite) {id -> noteId = id}
                         }
                     },
                     placeholder = { Text(
