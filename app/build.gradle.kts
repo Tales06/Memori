@@ -105,6 +105,9 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.4.0-alpha07")
     implementation("io.coil-kt:coil-compose:2.0.0")
 
+    //implemetazione palette
+    implementation("androidx.palette:palette-ktx:1.0.0")
+
 
 
 }

@@ -35,4 +35,8 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
     fun getFavoritesNote(): Flow<List<NotesEntity>> {
         return repository.getFavoritesNote()
     }
+
+    fun searchNotes(searchQuery: String): Flow<List<NotesEntity>> {
+        return repository.searchNotes(searchQuery)
+    }
 }

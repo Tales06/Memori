@@ -1,6 +1,7 @@
 package com.example.memori
-
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
@@ -20,10 +22,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -88,54 +93,76 @@ fun HomeScreen(
     navController: NavController,
     noteViewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
-            repository = NotesRepository(NoteDatabase.getDatabase(
-                context = LocalContext.current
-
-            ).noteDao())
+            repository = NotesRepository(
+                NoteDatabase.getDatabase(context = LocalContext.current).noteDao()
+            )
         )
-    )){
-
+    )
+) {
     val notesState by noteViewModel.allNotes.collectAsStateWithLifecycle(initialValue = emptyList())
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    val randomKaomoji by remember { mutableStateOf(kaomoji.random()) }
-    Surface (
-        contentColor = MaterialTheme.colorScheme.background,
+    val listState = rememberLazyListState()
+    var isSearchBarVisible by remember { mutableStateOf(true) }
 
-    ){
-
-        if(notesState.isEmpty()){
-
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ){
-                Text(
-                    text = randomKaomoji,
-                    color = Color.DarkGray,
-                    style = TextStyle(fontSize = 45.sp, fontWeight = FontWeight.Bold),
-                    modifier = Modifier.align(Alignment.Center)
-
-                )
-
-
-                Text(
-                    text = "No notes yet",
-                    fontSize = 18.sp,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.align(Alignment.Center).padding(top = 90.dp)
-                )
-            }
-        } else {
-
-            NoteCard(notesState, navController)
-        }
-
-        ButtonNote(navController)
-
+    // Osserva il comportamento dello scroll
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        isSearchBarVisible = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset < 10
     }
 
+    val randomKaomoji by remember { mutableStateOf(kaomoji.random()) }
+    val searchBarHeight by animateDpAsState(targetValue = if (isSearchBarVisible) 70.dp else 0.dp)
+
+    Surface(
+        contentColor = MaterialTheme.colorScheme.background
+    ) {
+        Column {
+            Spacer(modifier = Modifier.height(searchBarHeight))
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (notesState.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = randomKaomoji,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            style = TextStyle(fontSize = 45.sp, fontWeight = FontWeight.Bold),
+                            modifier = Modifier.align(Alignment.Center)
+
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text(
+                            text = "No notes yet",
+                            fontSize = 18.sp,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(top = 90.dp)
+                        )
+                    }
+                } else {
+                    NoteCard(notes = notesState, navController = navController)
+                }
+            }
+        }
+
+        SearchBarComponent(
+            navController = navController,
+            noteViewModel = noteViewModel,
+            modifier = Modifier
+                .height(searchBarHeight)
+                .padding(8.dp)
+        )
+
+        ButtonNote(navController)
+    }
 }
+
+
 
 

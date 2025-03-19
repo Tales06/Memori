@@ -26,4 +26,9 @@ class NotesRepository(private val noteDao: NoteDao){
         return noteDao.getFavoritesNote()
     }
 
+    fun searchNotes(searchQuery: String): Flow<List<NotesEntity>> {
+        return noteDao.searchNotes(searchQuery)
+    }
+
+
 }

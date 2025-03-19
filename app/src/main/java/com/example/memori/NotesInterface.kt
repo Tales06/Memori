@@ -4,6 +4,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
@@ -29,6 +31,31 @@ data class NotesEntity(
     @ColumnInfo(name = "wallpaper")
     val image: String? = null
 
+)
+
+@Entity(
+    tableName = "checklist_item",
+    foreignKeys = [ForeignKey(
+        entity = NotesEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["checkList_id"],
+        onDelete = ForeignKey.CASCADE
+    )],
+    indices = [Index(value = ["checkList_id"])]
+)
+data class CheckListNote(
+
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+
+    @ColumnInfo(name = "checkList_id")
+    val checkListId: Int,
+
+    @ColumnInfo(name = "item")
+    val item: String,
+
+    @ColumnInfo(name = "isChecked")
+    val isChecked: Boolean = false
 )
 
 

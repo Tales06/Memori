@@ -6,9 +6,12 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -16,37 +19,19 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.AddBox
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.*
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -56,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.palette.graphics.Palette
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -75,17 +61,19 @@ fun ScreenNotes(navController: NavHostController){
     var image by remember { mutableStateOf<String?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
-    val snackHostState = remember { SnackbarHostState() }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    var showBottomSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(
+    var showBottomSheetForWallpaper by remember { mutableStateOf(false) }
+    var showBottomSheetForMoreOptions by remember { mutableStateOf(false) }
+    val sheetStateForWallpaper = rememberModalBottomSheetState(
+        skipPartiallyExpanded = false
+    )
+    val sheetStateForOptions = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
 
     val context = LocalContext.current
-
 
 
         Box(
@@ -151,12 +139,14 @@ fun ScreenNotes(navController: NavHostController){
                 BottomAppBar (
                     containerColor = Color.Transparent,
                     actions = {
-                        IconButton(onClick = {/*Do something*/}) {
+                        IconButton(onClick = {
+                            showBottomSheetForMoreOptions = true
+                        }) {
                             Icon(Icons.Outlined.AddBox, contentDescription = "Show menu")
 
                         }
                         IconButton(onClick = {
-                            showBottomSheet = true
+                            showBottomSheetForWallpaper = true
 
                         }) {
                             Icon(Icons.Outlined.Palette, contentDescription = "Change theme")
@@ -202,7 +192,7 @@ fun ScreenNotes(navController: NavHostController){
                             fontSize = 24.sp,
 
                         ),
-                        color = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                        color = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
 
                     )},
                     colors = TextFieldDefaults.colors(
@@ -211,7 +201,7 @@ fun ScreenNotes(navController: NavHostController){
                         disabledIndicatorColor = Color.Transparent,  // Rimuove il bordo quando disabilitato
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
-                        cursorColor = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+                        cursorColor = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground,
 
 
 
@@ -219,7 +209,7 @@ fun ScreenNotes(navController: NavHostController){
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 24.sp,
-                        color = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                        color = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
 
                     ),
                     modifier = Modifier.fillMaxWidth(1f)
@@ -239,7 +229,7 @@ fun ScreenNotes(navController: NavHostController){
                             fontSize = 15.sp,
 
                         ),
-                        color = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                        color = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
                     )},
                     modifier = Modifier.fillMaxWidth(1f)
                         .padding(top = 35.dp),
@@ -249,14 +239,14 @@ fun ScreenNotes(navController: NavHostController){
                         disabledIndicatorColor = Color.Transparent,  // Rimuove il bordo quando disabilitato
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
-                        cursorColor = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+                        cursorColor = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground,
 
 
 
                     ),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         fontSize = 15.sp,
-                        color = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface,
+                        color = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground,
 
                     ),
 
@@ -264,13 +254,65 @@ fun ScreenNotes(navController: NavHostController){
                 )
             }
         }
-
-    if (showBottomSheet) {
+    if(showBottomSheetForMoreOptions){
         ModalBottomSheet(
             modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-            sheetState = sheetState,
+            sheetState = sheetStateForOptions,
             onDismissRequest = {
-                showBottomSheet = false
+                coroutineScope.launch {
+                    sheetStateForOptions.hide()
+                    showBottomSheetForMoreOptions = false
+                }
+            },
+            tonalElevation = 2.dp,
+
+
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp).align(Alignment.Start)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Outlined.CheckBox,
+                        contentDescription = "Check box",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Add Checkboxes",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.Image,
+                        contentDescription = "Add image",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Add image",
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
+        }
+    }
+
+    if (showBottomSheetForWallpaper) {
+        ModalBottomSheet(
+            modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+            sheetState = sheetStateForWallpaper,
+            onDismissRequest = {
+                coroutineScope.launch {
+                    sheetStateForWallpaper.hide()
+                    showBottomSheetForWallpaper = false
+                }
             },
 
             tonalElevation = 2.dp
@@ -284,6 +326,9 @@ fun ScreenNotes(navController: NavHostController){
                 R.drawable.wallpaper_1,
                 R.drawable.wallpaper_2,
                 R.drawable.wallpaper_3,
+                R.drawable.wallpaper_4,
+                R.drawable.wallpaper_5,
+                R.drawable.wallpaper_6,
             )
 
             LazyRow (
@@ -302,7 +347,8 @@ fun ScreenNotes(navController: NavHostController){
                                 saveNotes(db, noteId, title, text, favorite, selectedWallpaper) {id -> noteId = id}
                                 image = selectedWallpaper
                                 Log.e("Wallpaper", selectedWallpaper)
-                                showBottomSheet = false
+                                sheetStateForWallpaper.hide()
+                                showBottomSheetForWallpaper = false
                             }
                         }
                     ) {
@@ -350,19 +396,7 @@ suspend fun saveNotes(
     }
 }
 
-suspend fun updateNoteWallpaper(
-    db: NoteDatabase,
-    noteID: Int,
-    wallpaper: String,
-){
-    val noteDao = db.noteDao()
 
-    val noteFlow = noteDao.getNoteById(noteID ?: return)
-    val note = noteFlow.first() ?: return
-
-    val updateNote = note.copy(image = wallpaper)
-    noteDao.update(updateNote)
-}
 
 fun saveWallpaperInLocally(context: Context, uri: Uri): String?{
     val file = File(context.filesDir, "wallpaper/${System.currentTimeMillis()}.png")
@@ -381,6 +415,13 @@ fun saveWallpaperInLocally(context: Context, uri: Uri): String?{
 
     }
 }
+
+
+
+
+
+
+
 
 
 

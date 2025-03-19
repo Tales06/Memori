@@ -1,5 +1,6 @@
 package com.example.memori
 
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -47,7 +48,7 @@ fun FavoritesScreen(
             if(noteState.isEmpty()){
                 Text(
                     text = randomKaomoji,
-                    color = Color.DarkGray,
+                    color = MaterialTheme.colorScheme.onBackground,
                     style = TextStyle(fontSize = 45.sp, fontWeight = FontWeight.Bold),
                     modifier = Modifier.align(Alignment.Center)
 
@@ -62,7 +63,7 @@ fun FavoritesScreen(
                     modifier = Modifier.align(Alignment.Center).padding(top = 90.dp)
                 )
             }else{
-                NoteCard(noteState, navController)
+                NoteCard(notes = noteState, navController = navController)
             }
         }
     }

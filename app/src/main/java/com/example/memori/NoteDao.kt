@@ -1,10 +1,6 @@
 package com.example.memori
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 
@@ -33,5 +29,25 @@ interface NoteDao{
 
     @Query("SELECT * FROM notes WHERE favorite = 1")
     fun getFavoritesNote(): Flow<List<NotesEntity>>
+
+    @Query("SELECT * FROM notes WHERE title LIKE '%' || :searchQuery || '%' OR content LIKE '%' || :searchQuery || '%'")
+    fun searchNotes(searchQuery: String): Flow<List<NotesEntity>>
+
+}
+
+@Dao
+interface CheckListDao{
+
+    @Insert
+    suspend fun insert(checkListNote: CheckListNote): Long
+
+    @Query("SELECT * FROM checklist_item WHERE checkList_id = :checkListId")
+    fun getCheckListItems(checkListId: Int): Flow<List<CheckListNote>>
+
+    @Update
+    suspend fun updateCheckListItem(checkListNote: CheckListNote)
+
+    @Query("DELETE FROM checklist_item WHERE checkList_id = :checkListId")
+    suspend fun deleteCheckListItems(checkListId: Int)
 
 }

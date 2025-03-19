@@ -3,9 +3,12 @@ package com.example.memori
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -14,9 +17,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.AddBox
+import androidx.compose.material.icons.outlined.CheckBox
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Palette
@@ -37,6 +42,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -82,8 +88,12 @@ fun ScreenModifiedNotes(
 
     var isInitialLoad by remember { mutableStateOf(false) }
 
-    var showBottomSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(
+    var showBottomSheetForWallpaper by remember { mutableStateOf(false) }
+    var showBottomSheetForMoreOptions by remember { mutableStateOf(false) }
+    val sheetStateForWallpaper = rememberModalBottomSheetState(
+        skipPartiallyExpanded = false
+    )
+    val sheetStateForOptions = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -132,8 +142,12 @@ fun ScreenModifiedNotes(
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+                    containerColor = Color.Transparent,
+                    navigationIconContentColor = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground,
+
                 ),
+
                 navigationIcon = {
                     IconButton(onClick = { navController.navigate("home") }) {
                         Icon(Icons.Filled.Close, contentDescription = null)
@@ -161,14 +175,18 @@ fun ScreenModifiedNotes(
         },
         bottomBar = {
             BottomAppBar (
+
                 containerColor = Color.Transparent,
+                contentColor = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground ,
                 actions = {
-                    IconButton(onClick = {/*Do something*/}) {
+                    IconButton(onClick = {
+                        showBottomSheetForMoreOptions = true
+                    }) {
                         Icon(Icons.Outlined.AddBox, contentDescription = "Show menu")
 
                     }
                     IconButton(onClick = {
-                        showBottomSheet = true
+                        showBottomSheetForWallpaper = true
                     }) {
                         Icon(Icons.Outlined.Palette, contentDescription = "Change theme")
                     }
@@ -209,7 +227,7 @@ fun ScreenModifiedNotes(
                             fontWeight = FontWeight.Bold,
                             fontSize = 24.sp
                         ),
-                        color = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                        color = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
                     )
                 },
                 colors = TextFieldDefaults.colors(
@@ -218,13 +236,13 @@ fun ScreenModifiedNotes(
                     disabledIndicatorColor = Color.Transparent,  // Rimuove il bordo quando disabilitato
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
-                    cursorColor = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                    cursorColor = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
 
                 ),
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp,
-                    color = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                    color = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier.fillMaxWidth(1f)
 
@@ -244,7 +262,7 @@ fun ScreenModifiedNotes(
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontSize = 15.sp
                         ),
-                        color = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                        color = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
                     )
                 },
                 modifier = Modifier.fillMaxWidth(1f)
@@ -255,23 +273,75 @@ fun ScreenModifiedNotes(
                     disabledIndicatorColor = Color.Transparent,  // Rimuove il bordo quando disabilitato
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
-                    cursorColor = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                    cursorColor = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
 
                 ),
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 15.sp,
-                    color = if(image == "wallpaper_3") Color.Black.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                    color = if(image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
                 )
             )
 
 
         }
-        if (showBottomSheet) {
+        if(showBottomSheetForMoreOptions){
             ModalBottomSheet(
                 modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                sheetState = sheetState,
+                sheetState = sheetStateForOptions,
                 onDismissRequest = {
-                    showBottomSheet = false
+                    coroutineScope.launch {
+                        sheetStateForOptions.hide()
+                        showBottomSheetForMoreOptions = false
+                    }
+                },
+                tonalElevation = 2.dp,
+
+
+                ) {
+                Column(
+                    modifier = Modifier.padding(16.dp).align(Alignment.Start)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.CheckBox,
+                            contentDescription = "Check box",
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = "Add Checkboxes",
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Image,
+                            contentDescription = "Add image",
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = "Add image",
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+            }
+        }
+        if (showBottomSheetForWallpaper) {
+            ModalBottomSheet(
+                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                sheetState = sheetStateForWallpaper,
+                onDismissRequest = {
+                    coroutineScope.launch {
+                        sheetStateForWallpaper.hide()
+                        showBottomSheetForWallpaper = false
+                    }
                 },
 
                 tonalElevation = 2.dp
@@ -285,6 +355,9 @@ fun ScreenModifiedNotes(
                     R.drawable.wallpaper_1,
                     R.drawable.wallpaper_2,
                     R.drawable.wallpaper_3,
+                    R.drawable.wallpaper_4,
+                    R.drawable.wallpaper_5,
+                    R.drawable.wallpaper_6,
                 )
 
                 LazyRow (
@@ -304,7 +377,7 @@ fun ScreenModifiedNotes(
                                     saveNotes(db, noteId, title, content, favorite, selectedWallpaper) {id -> noteId = id}
                                     image = selectedWallpaper
                                     Log.e("Wallpaper", selectedWallpaper)
-                                    showBottomSheet = false
+                                    showBottomSheetForWallpaper = false
                                 }
                             }
                         ) {

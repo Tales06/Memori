@@ -102,7 +102,6 @@ fun BottomBar(
 fun Navigation(navController: NavHostController, modifier: Modifier){
     NavHost(navController = navController, startDestination = "home", modifier = modifier) {
         composable("home") {
-
             HomeScreen(navController)
         }
         composable("favorites") {
