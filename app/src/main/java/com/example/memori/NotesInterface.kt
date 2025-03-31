@@ -43,7 +43,7 @@ data class NotesEntity(
     )],
     indices = [Index(value = ["checkList_id"])]
 )
-data class CheckListNote(
+data class CheckListNoteEntity(
 
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,

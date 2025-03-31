@@ -5,10 +5,12 @@ import kotlinx.coroutines.flow.Flow
 class NotesRepository(private val noteDao: NoteDao){
     val allNotes: Flow<List<NotesEntity>> = noteDao.getAllNotes()
 
+    //funzione per inserire una nota
     suspend fun insert(note: NotesEntity){
         noteDao.insert(note)
-
     }
+
+
 
     fun getNoteById(id: Int): Flow<NotesEntity> {
         return noteDao.getNoteById(id)

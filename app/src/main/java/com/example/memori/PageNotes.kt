@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -40,9 +42,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.palette.graphics.Palette
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
@@ -60,6 +64,9 @@ fun ScreenNotes(navController: NavHostController){
     var favorite by remember { mutableStateOf<Boolean>(false) }
     var image by remember { mutableStateOf<String?>(null) }
 
+    var isCheckItem by rememberSaveable { mutableStateOf<Boolean>(false) }
+    var checkListId by rememberSaveable { mutableStateOf<Int?>(null) }
+
     val coroutineScope = rememberCoroutineScope()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -72,6 +79,8 @@ fun ScreenNotes(navController: NavHostController){
     val sheetStateForOptions = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
+
+    var isCheckBoxSelected by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -251,9 +260,13 @@ fun ScreenNotes(navController: NavHostController){
                     ),
 
 
+
+
                 )
             }
+
         }
+
     if(showBottomSheetForMoreOptions){
         ModalBottomSheet(
             modifier = Modifier.fillMaxWidth().wrapContentHeight(),
@@ -278,7 +291,12 @@ fun ScreenNotes(navController: NavHostController){
                     Icon(
                         Icons.Outlined.CheckBox,
                         contentDescription = "Check box",
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp).clickable {
+                            coroutineScope.launch {
+                                isCheckBoxSelected = !isCheckBoxSelected
+                                sheetStateForOptions.hide()
+                            }
+                        }
                     )
                     Text(
                         text = "Add Checkboxes",
@@ -374,6 +392,8 @@ fun ScreenNotes(navController: NavHostController){
 
 
 
+
+
 suspend fun saveNotes(
     db: NoteDatabase,
     noteID: Int?,
@@ -396,7 +416,25 @@ suspend fun saveNotes(
     }
 }
 
+suspend fun saveCheckListItem(
+    db: NoteDatabase,
+    checkListID: Int?,
+    content: String,
+    isChecked: Boolean,
+    onCheckListItemSaved: (Int) -> Unit
+){
+    val checkListDao = db.checkListDao()
 
+    val checkListItem = CheckListNoteEntity(id = checkListID ?: 0, checkListId = checkListID ?: 0, item = content, isChecked = isChecked)
+
+    if(checkListID == null || checkListID == 0){
+        val newID: Long = checkListDao.insert(checkListItem)
+        onCheckListItemSaved(newID.toInt())
+    } else {
+        checkListDao.updateCheckListItem(checkListItem)
+        onCheckListItemSaved(checkListID)
+    }
+}
 
 fun saveWallpaperInLocally(context: Context, uri: Uri): String?{
     val file = File(context.filesDir, "wallpaper/${System.currentTimeMillis()}.png")

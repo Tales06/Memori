@@ -12,3 +12,13 @@ class NoteViewModelFactory(private val repository: NotesRepository) : ViewModelP
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+class CheckListItemViewModelFactory(private val repository: CheckListNoteRepository): ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(CheckListItemViewModel::class.java)) {
+            return CheckListItemViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}

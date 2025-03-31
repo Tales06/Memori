@@ -39,13 +39,17 @@ interface NoteDao{
 interface CheckListDao{
 
     @Insert
-    suspend fun insert(checkListNote: CheckListNote): Long
+    suspend fun insert(checkListNote: CheckListNoteEntity): Long
+
+    @Query("SELECT * FROM checklist_item")
+    fun getAllCheckListItems(): Flow<List<CheckListNoteEntity>>
 
     @Query("SELECT * FROM checklist_item WHERE checkList_id = :checkListId")
-    fun getCheckListItems(checkListId: Int): Flow<List<CheckListNote>>
+    fun getCheckListItems(checkListId: Int): Flow<CheckListNoteEntity>
 
     @Update
-    suspend fun updateCheckListItem(checkListNote: CheckListNote)
+    suspend fun updateCheckListItem(checkListNote: CheckListNoteEntity)
+
 
     @Query("DELETE FROM checklist_item WHERE checkList_id = :checkListId")
     suspend fun deleteCheckListItems(checkListId: Int)
