@@ -4,14 +4,17 @@ plugins {
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
     kotlin("plugin.serialization") version "2.0.21"
     id("kotlin-kapt")
+    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
     namespace = "com.example.memori"
     compileSdk = 35
 
+
     defaultConfig {
-        applicationId = "com.example.memori"
+        applicationId = "com.example.app_memori"
         minSdk = 34
         targetSdk = 34
         versionCode = 1
@@ -54,6 +57,13 @@ android {
 }
 
 dependencies {
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.androidx.media3.common.ktx)
+    implementation(libs.play.services.base)
+    implementation(libs.firebase.firestore.ktx)
     val nav_version = "2.8.4"
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -94,8 +104,8 @@ dependencies {
 
 
 
-    implementation("androidx.room:room-runtime:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.7.1")
+    kapt("androidx.room:room-compiler:2.7.1")
 
     implementation ("androidx.lifecycle:lifecycle-runtime-compose:2.8.7") // Usa la versione più recente
     implementation( "androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
@@ -107,6 +117,33 @@ dependencies {
 
     //implemetazione palette
     implementation("androidx.palette:palette-ktx:1.0.0")
+
+    implementation("io.coil-kt:coil-compose:2.2.2")
+
+    implementation("com.google.code.gson:gson:2.13.0")
+
+    // Lottie Animation
+    implementation("com.airbnb.android:lottie-compose:6.0.0")
+
+    // Font personalizzato (es. Google Fonts)
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
+
+    //Data store
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    implementation ("androidx.compose.ui:ui-text-google-fonts:1.6.0")
+
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+
+    implementation ("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+
+
+
+
+
+
+
+
 
 
 
