@@ -62,7 +62,7 @@ import com.example.memori.theme.MyPalette
 fun SetupPage(
     onContinue: () -> Unit,
 ) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.Asset("memori.json"))
+    val composition by rememberLottieComposition(LottieCompositionSpec.Asset("data.json"))
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = LottieConstants.IterateForever

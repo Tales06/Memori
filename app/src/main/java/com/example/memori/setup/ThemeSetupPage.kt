@@ -141,7 +141,7 @@ fun ThemeSetupPage(
                 Text(
                     text = "Continue",
                     fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))

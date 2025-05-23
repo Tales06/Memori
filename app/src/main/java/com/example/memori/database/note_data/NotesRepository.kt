@@ -8,8 +8,8 @@ class NotesRepository(private val noteDao: NoteDao){
     val allNotes: Flow<List<NotesEntity>> = noteDao.getAllNotes()
 
     //funzione per inserire una nota
-    suspend fun insert(note: NotesEntity){
-        noteDao.insert(note)
+    suspend fun insert(note: NotesEntity): Long {
+       return noteDao.insert(note)
     }
 
 
@@ -54,8 +54,8 @@ class NotesRepository(private val noteDao: NoteDao){
         return noteDao.getNotesInFolder(folderId)
     }
 
-    suspend fun deletePathImg(noteId: Int) {
-        noteDao.deletePathImg(noteId)
+    suspend fun clearNoteFolder(noteId: Int) {
+        noteDao.clearNoteFolder(noteId)
     }
 
 

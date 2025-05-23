@@ -1,5 +1,6 @@
 package com.example.memori.composable
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,13 +8,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -43,6 +51,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,7 +68,9 @@ import com.example.memori.database.note_data.NoteViewModel
 import com.example.memori.database.note_data.NoteViewModelFactory
 import com.example.memori.database.note_data.NotesEntity
 import com.example.memori.database.note_data.NotesRepository
+import com.example.memori.preference.PinPreferences.pinHashFlow
 import kotlinx.coroutines.launch
+import java.security.MessageDigest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,12 +91,16 @@ fun ArchivePage(
         )
     ),
 ) {
+    val context = LocalContext.current
+
     val archivedNotes = viewModel.getArchivedNotes().collectAsStateWithLifecycle(initialValue = emptyList())
     val archivedNotesState = archivedNotes.value
 
     var folderName by remember { mutableStateOf("") }
     val foldersState by folderViewModel.allFolders.collectAsStateWithLifecycle()
     var showFolderDialog by remember { mutableStateOf(false) }
+
+    var showUnarchiveDialog by remember { mutableStateOf(false) }
 
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -96,6 +113,12 @@ fun ArchivePage(
 
     var selectionMode by remember { mutableStateOf(false) }
     val selectedNotes = remember { mutableStateListOf<NotesEntity>() }
+
+    var showPinDialog by remember { mutableStateOf(false) }
+    var pinInput by remember { mutableStateOf("") }
+    val pinHash by context.pinHashFlow().collectAsState(initial = null)
+    var pinVisible by remember { mutableStateOf(false) }
+    val pinValid = pinInput.length in 4..6
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -157,6 +180,35 @@ fun ArchivePage(
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
+
+                    NavigationDrawerItem(
+                        label = {
+                            Text(
+                                text = "Protected folder",
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
+                        selected = false,
+                        onClick = {
+                            scope.launch {
+                                drawerState.close()
+                                if (pinHash == null || pinHash == "") {
+                                    navController.navigate("protected_info")
+                                } else {
+                                    showPinDialog = true
+                                }
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Lock,
+                                contentDescription = "Protected folder",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+
+                    )
                     NavigationDrawerItem(
                         label = {
                             Text(
@@ -188,6 +240,7 @@ fun ArchivePage(
                             modifier = Modifier.padding(16.dp)
                         )
                         foldersState.forEach { folder ->
+                            if (folder.folderName == "Protected") return@forEach
                             Spacer(modifier = Modifier.height(8.dp))
                             NavigationDrawerItem(
                                 label = {
@@ -256,6 +309,103 @@ fun ArchivePage(
                 }
             )
         }
+        if (showPinDialog) {
+            AlertDialog(
+                onDismissRequest = { showPinDialog = false },
+                title = { Text("Unlock protected folder") },
+                text = {
+                    OutlinedTextField(
+                        value = pinInput,
+                        onValueChange = { pinInput = it },
+                        label = { Text("PIN") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        visualTransformation = if (pinVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { pinVisible = !pinVisible }) {
+                                Icon(
+                                    imageVector = if (pinVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                                    contentDescription = if (pinVisible) "Hide PIN" else "Show PIN"
+                                )
+                            }
+                        },
+                        isError = pinInput.isNotEmpty() && !pinValid,
+
+                        )
+
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        // Calcola hash di pinInput
+                        val digest = MessageDigest.getInstance("SHA-256")
+                        val hashBytes = digest.digest(pinInput.toByteArray(Charsets.UTF_8))
+                        val attemptHash = hashBytes.joinToString("") { "%02x".format(it) }
+                        if (attemptHash == pinHash) {
+                            // Trova cartella e naviga
+                            val prot = foldersState.find { it.folderName == "Protected" }
+                            prot?.let {
+                                navController.navigate("folderNotes/${it.id}/${it.folderName}") {
+                                    popUpTo("home") { inclusive = true }
+                                }
+                            }
+                            showPinDialog = false
+                            pinInput = ""
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Incorrect PIN",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showPinDialog = false }) {
+                        Text("Cancel")
+                    }
+                },
+
+            )
+        }
+        if(showUnarchiveDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showUnarchiveDialog = false
+                    selectedNotes.clear()
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            selectedNotes.forEach { note ->
+                                viewModel.unArchiveNote(note.id)
+                            }
+                            showUnarchiveDialog = false
+                        }
+                    ) {
+                        Text("Confirm")
+                    }
+                },
+                icon = {
+                    Icon(Icons.Default.Unarchive, null)
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showUnarchiveDialog = false
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                },
+                title = {
+                    Text("Unarchive notes")
+                },
+                text = {
+                    Text("Do you want to unarchive this notes")
+                }
+            )
+        }
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -278,6 +428,26 @@ fun ArchivePage(
                             },
                         ) {
                             Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                        }
+                    },
+                    actions = {
+                        if(selectionMode) {
+                            IconButton(
+                                onClick = {
+                                    selectedNotes.forEach { note ->
+                                        viewModel.delete(note.id)
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            }
+                            IconButton(
+                                onClick = {
+                                    showUnarchiveDialog = true
+                                }
+                            ) {
+                                Icon(Icons.Default.Unarchive, contentDescription = "Unarchive")
+                            }
                         }
                     }
                 )

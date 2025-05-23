@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,10 +40,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -94,7 +99,7 @@ fun ScreenNotes(
     var noteId by remember { mutableStateOf<Int?>(null) }
     var favorite by remember { mutableStateOf<Boolean>(false) }
     var image by remember { mutableStateOf<String?>(null) }
-    var imageOnNote by remember { mutableStateOf<String?>(null) }
+
 
     val allFolderAvailable by folderViewModel.allFolders.collectAsStateWithLifecycle()
     var selectedFolder by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -106,11 +111,7 @@ fun ScreenNotes(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     var showBottomSheetForWallpaper by remember { mutableStateOf(false) }
-    var showBottomSheetForMoreOptions by remember { mutableStateOf(false) }
     val sheetStateForWallpaper = rememberModalBottomSheetState(
-        skipPartiallyExpanded = false
-    )
-    val sheetStateForOptions = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
 
@@ -121,28 +122,15 @@ fun ScreenNotes(
 
     val context = LocalContext.current
 
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let {
-                val imagePath = saveWallpaperInLocally(context, it)
-                imageOnNote = imagePath
+    val contentFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-                coroutineScope.launch {
-                    delay(500)
-                    saveNotes(
-                        viewModelNote,
-                        noteId,
-                        title,
-                        text,
-                        favorite,
-                        wallpaper = image,
-                        image = imagePath,
 
-                    ) { noteId = it }
-                }
-            }
+    LaunchedEffect(showDialogForFolder) {
+        if (showDialogForFolder) {
+            selectedFolder = folderId
         }
-
+    }
 
 
 
@@ -211,7 +199,8 @@ fun ScreenNotes(
                                 title,
                                 text,
                                 favorite,
-                                image
+                                image,
+                                folderId = selectedFolder ?: folderId
                             ) { noteId = it }
                         }
 
@@ -251,12 +240,7 @@ fun ScreenNotes(
             BottomAppBar(
                 containerColor = Color.Transparent,
                 actions = {
-                    IconButton(onClick = {
-                        showBottomSheetForMoreOptions = true
-                    }) {
-                        Icon(Icons.Outlined.AddBox, contentDescription = "Show menu")
 
-                    }
                     IconButton(onClick = {
                         showBottomSheetForWallpaper = true
 
@@ -289,36 +273,16 @@ fun ScreenNotes(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    contentFocusRequester.requestFocus()
+                    keyboardController?.show()
+                },
 
             ) {
-
-
-            if (!imageOnNote.isNullOrBlank()) {
-                val resIdImg =
-                    context.resources.getIdentifier(imageOnNote, "drawable", context.packageName)
-                val painter = if (resIdImg != 0) {
-                    painterResource(id = resIdImg)
-                } else {
-                    rememberAsyncImagePainter(imageOnNote)
-                }
-                Image(
-                    painter = painter,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(bottom = 16.dp)
-                        .zIndex(-1f)
-                        .clickable {
-                            Log.e("Nav", "Immagine cliccata")
-                            Log.e("Nav", "Id: $noteId")
-                            navController.navigate("detailsImage/${Uri.encode(imageOnNote)}/${noteId}")
-                        },
-                    contentScale = ContentScale.Crop,
-                )
-
-            }
 
             OutlinedTextField(
                 value = title,
@@ -332,8 +296,9 @@ fun ScreenNotes(
                             title,
                             text,
                             favorite,
-                            image
-                        ) { noteId = it}
+                            image,
+                            folderId = selectedFolder ?: folderId
+                        ) { noteId = it }
                     }
 
                 },
@@ -366,7 +331,10 @@ fun ScreenNotes(
                     color = if (image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
 
                 ),
-                modifier = Modifier.fillMaxWidth(),
+
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(contentFocusRequester),
 
 
                 )
@@ -382,7 +350,9 @@ fun ScreenNotes(
                             title,
                             text,
                             favorite,
-                            image
+                            image,
+                            folderId = selectedFolder ?: folderId
+
                         ) { noteId = it }
                     }
                 },
@@ -398,7 +368,8 @@ fun ScreenNotes(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = -16.dp),
+                    .offset(y = -16.dp)
+                    .focusRequester(contentFocusRequester),
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
@@ -470,15 +441,17 @@ fun ScreenNotes(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            if (selectedFolder != null) {
-                                coroutineScope.launch {
-                                    delay(500)
-                                    viewModelNote.moveNoteToFolder(noteId ?: 0, selectedFolder ?: 0)
-                                    showDialogForFolder = false
-                                }
+                            if (selectedFolder == null) {
+
+                                viewModelNote.clearNoteFolder(noteId ?: 0)
+
                             } else {
-                                showDialogForFolder = false
+
+                                viewModelNote.moveNoteToFolder(noteId ?: 0, selectedFolder ?: 0)
+
                             }
+                            showDialogForFolder = false
+
                         }
                     ) {
                         Text(text = "Confirm")
@@ -501,8 +474,27 @@ fun ScreenNotes(
                 },
                 text = {
                     Column {
+                        Card(
+                            onClick = { selectedFolder = null },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            border = if (selectedFolder == null)
+                                BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Icon(Icons.Outlined.FolderOff, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("No folder", style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
                         allFolderAvailable.forEach { folder ->
-                            val isSelected = selectedFolder == folder.id || folder.id == folderId
+                            val isSelected = selectedFolder == folder.id
                             Card(
                                 onClick = {
                                     selectedFolder = folder.id
@@ -548,51 +540,7 @@ fun ScreenNotes(
 
     }
 
-    if (showBottomSheetForMoreOptions) {
-        ModalBottomSheet(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-            sheetState = sheetStateForOptions,
-            onDismissRequest = {
-                coroutineScope.launch {
-                    sheetStateForOptions.hide()
-                    showBottomSheetForMoreOptions = false
-                }
-            },
-            tonalElevation = 2.dp,
 
-
-            ) {
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        showBottomSheetForMoreOptions = !showBottomSheetForMoreOptions
-                        sheetStateForOptions.hide()
-                        launcher.launch("image/*")
-
-                    }
-                },
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Image,
-                        contentDescription = "View Images",
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Add image")
-                }
-            }
-        }
-
-
-    }
 
     if (showBottomSheetForWallpaper) {
         ModalBottomSheet(
@@ -639,8 +587,9 @@ fun ScreenNotes(
                                     noteId,
                                     title,
                                     text,
-                                    favorite
-                                ) { noteId = it}
+                                    favorite,
+                                    folderId = folderId
+                                ) { noteId = it }
                                 sheetStateForWallpaper.hide()
                                 showBottomSheetForWallpaper = false
                             }
@@ -679,8 +628,9 @@ fun ScreenNotes(
                                     title,
                                     text,
                                     favorite,
-                                    selectedWallpaper
-                                ) { noteId = it }
+                                    selectedWallpaper,
+                                    folderId = folderId
+                                ) { id -> noteId = id }
                                 image = selectedWallpaper
                                 Log.e("Wallpaper", selectedWallpaper)
                                 sheetStateForWallpaper.hide()
@@ -717,14 +667,14 @@ fun saveNotes(
     content: String,
     favorite: Boolean,
     wallpaper: String? = null,
-    image: String? = null,
-    onNoteSaved: (Int?) -> Unit
+    folderId: Int? = null,
+    onNoteSaved: (Int?) -> Unit,
 
-) {
+
+    ) {
     val isEmpty = title.isBlank()
             && content.isBlank()
             && wallpaper.isNullOrBlank()
-            && image.isNullOrBlank()
     if (isEmpty) {
         noteID?.takeIf { it != 0 }?.let { viewModelNote.delete(it) }
         onNoteSaved(null)
@@ -737,61 +687,21 @@ fun saveNotes(
         content = content,
         favorite = favorite,
         image = wallpaper,
-        pathImg = image,
+        folderId = folderId,
     )
 
     if (noteID != null && noteID != 0) {
         viewModelNote.update(note)
         onNoteSaved(noteID)
     } else {
-        // qui potresti lasciare Room generare l’ID se usi AutoIncrement,
-        // altrimenti genera manualmente
-        val newId = (0..Int.MAX_VALUE).random()
-        viewModelNote.insert(note.copy(id = newId))
-        onNoteSaved(newId)
-    }
-}
-
-fun saveImageOnNote(
-    viewModelNote: NoteViewModel,
-    noteID: Int?,
-    image: String,
-    onImageSaved: (Int) -> Unit
-) {
-
-    val note = NotesEntity(
-        id = noteID ?: 0,
-        title = "",
-        content = "",
-        favorite = false,
-        pathImg = image,
-    )
-
-    if (noteID == null || noteID == 0) {
-        val newID = (0..Int.MAX_VALUE).random()
-        viewModelNote.insert(note.copy(id = newID))
-        onImageSaved(newID)
-    } else {
-        viewModelNote.update(note)
-        onImageSaved(noteID)
-    }
-}
-
-
-fun saveWallpaperInLocally(context: Context, uri: Uri): String? {
-    val file = File(context.filesDir, "wallpaper/${System.currentTimeMillis()}.png")
-    file.parentFile?.mkdirs()
-
-    return try {
-        context.contentResolver.openInputStream(uri)?.use { input ->
-            file.outputStream().use { output ->
-                input.copyTo(output)
-            }
+        // Usa insertNote per ottenere l’ID
+        viewModelNote.insert(note) { newId ->
+            onNoteSaved(newId)
         }
-        file.absolutePath
-    } catch (e: IOException) {
-        e.printStackTrace()
-        null
-
     }
+
 }
+
+
+
+

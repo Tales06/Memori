@@ -127,9 +127,7 @@ fun MainScreen(
             onThemeSelected = { selectedTheme ->
 
                 themeViewModel.setTheme(selectedTheme)
-                scope.launch {
-                    context.setHasSeenSetup(true)
-                }
+
             },
             searchExpanded = searchExpanded,
             onSearchExpanded = { searchExpanded = it },

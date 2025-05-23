@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NoteDao{
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(note: NotesEntity): Long
 
     @Query("SELECT * FROM notes WHERE archivedNote = 0 AND folderId IS NULL ORDER BY id DESC")
@@ -48,8 +48,8 @@ interface NoteDao{
     @Query("SELECT * FROM notes WHERE folderId = :folderId")
     fun getNotesInFolder(folderId: Int): Flow<List<NotesEntity>>
 
-    @Query("UPDATE notes SET pathImg = null WHERE id = :noteId")
-    suspend fun deletePathImg(noteId: Int)
+    @Query("UPDATE notes SET folderId = NULL WHERE id = :noteId")
+    suspend fun clearNoteFolder(noteId: Int)
 
 
 

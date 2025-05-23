@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.memori.sync.FirestoreNoteRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class NoteViewModel(private val repository: NotesRepository): ViewModel() {
 
@@ -20,8 +22,12 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
     val allNotes: StateFlow<List<NotesEntity>> = repository.allNotes
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    fun insert(note: NotesEntity) = viewModelScope.launch {
-        repository.insert(note)
+    fun insert(note: NotesEntity, onInserted: (Int) -> Unit) = viewModelScope.launch {
+        val dbId = repository.insert(note)
+
+        withContext(Dispatchers.Main) {
+            onInserted(dbId.toInt())
+        }
 
         val userID = Firebase.auth.currentUser?.uid
 
@@ -111,8 +117,8 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         return repository.getNotesInFolder(folderId)
     }
 
-    fun deletePathImg(noteId: Int) = viewModelScope.launch {
-        repository.deletePathImg(noteId)
+    fun clearNoteFolder(noteId: Int) = viewModelScope.launch {
+        repository.clearNoteFolder(noteId)
 
         val userID = Firebase.auth.currentUser?.uid
         if (userID != null) {
@@ -123,9 +129,6 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         }
 
     }
-
-
-
 
 
 

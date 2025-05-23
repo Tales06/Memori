@@ -103,16 +103,7 @@ fun NoteCard(
 
                     ) {
                     Box {
-                        if (note.pathImg != null) {
-                            Image(
-                                painter = rememberAsyncImagePainter(note.pathImg),
-                                contentDescription = "Note image",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .heightIn(150.dp)
-                            )
-                        }
+
                         if (resIdImg != 0) {
                             Image(
                                 painter = painterResource(id = resIdImg),

@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.FolderOff
 import androidx.compose.material.icons.outlined.HideImage
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Palette
@@ -61,10 +63,13 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -104,13 +109,14 @@ fun ScreenModifiedNotes(
             )
         )
     ),
+    folderId: Int? = null,
+    folderName: String? = null,
     /**
      * ricordarsi che quando NoteViewModel nn viene creata l'instanza bisogna richiamarlo automaticamente con il viewModel stesso
      */
 
 ) {
     val note = viewModel.getNoteById(id).collectAsStateWithLifecycle(initialValue = null).value
-    val folder = folderViewModel.getFolderByUuid((note?.folderId ?: "").toString()).collectAsStateWithLifecycle(initialValue = null).value
 
     val allFolderAvailable by folderViewModel.allFolders.collectAsStateWithLifecycle()
 
@@ -119,24 +125,19 @@ fun ScreenModifiedNotes(
     var noteId by remember { mutableStateOf<Int?>(null) }
     var favorite by remember { mutableStateOf<Boolean>(false) }
     var image by remember { mutableStateOf<String?>(null) }
-    var imageOnNote by remember { mutableStateOf<String?>(null) }
     var isArchived by remember { mutableStateOf<Boolean>(false) }
     var folderIdFK by remember { mutableStateOf<Int?>(null) }
 
-    var folderId by remember { mutableStateOf<String?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
 
     var isInitialLoad by remember { mutableStateOf(false) }
 
     var showBottomSheetForWallpaper by remember { mutableStateOf(false) }
-    var showBottomSheetForMoreOptions by remember { mutableStateOf(false) }
     val sheetStateForWallpaper = rememberModalBottomSheetState(
         skipPartiallyExpanded = false
     )
-    val sheetStateForOptions = rememberModalBottomSheetState(
-        skipPartiallyExpanded = false
-    )
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     var showDialog by remember { mutableStateOf(false) }
@@ -144,20 +145,12 @@ fun ScreenModifiedNotes(
     var showDialogForFolder by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let {
-                val imagePath = saveWallpaperInLocally(context, it)
-                imageOnNote = imagePath
 
-                coroutineScope.launch {
-                    delay(500)
-                    saveImageOnNote(viewModel, noteId, imageOnNote ?: "") { id -> noteId = id }
-                }
-            }
-        }
+    val contentFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-    LaunchedEffect(note, folder) {
+
+    LaunchedEffect(note) {
         if (!isInitialLoad) {
 
             note?.let {
@@ -167,14 +160,11 @@ fun ScreenModifiedNotes(
                 favorite = it.favorite
                 image = it.image
                 isInitialLoad = true
-                imageOnNote = it.pathImg
                 isArchived = it.archivedNote
-                folderIdFK = it.folderId
+                folderIdFK = folderId ?: it.folderId
             }
 
-            folder?.let {
-                folderId = it.id.toString()
-            }
+
         }
     }
 
@@ -213,9 +203,26 @@ fun ScreenModifiedNotes(
                     ),
 
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigate("home") }) {
-                        Icon(Icons.Filled.Close, contentDescription = null)
+                    IconButton(
+                        onClick = {
+                            if(folderId != null && folderName != null) {
+                                navController.navigate("folderNotes/$folderId/$folderName") {
+                                    popUpTo("modifiedNotes/${id}/$folderId/$folderName") {
+                                        inclusive = true
+                                    }
+                                }
+                            } else {
+                                 navController.navigate("home") {
+                                     popUpTo("modifiedNotes/$id") {
+                                         inclusive = true
+                                     }
+                                 }
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
                     }
+
                 },
                 title = {
                     Text(text = "")
@@ -231,7 +238,8 @@ fun ScreenModifiedNotes(
                                 title,
                                 content,
                                 favorite,
-                                image
+                                image,
+                                folderId = folderIdFK
                             ) { id -> noteId = id }
                         }
                     }) {
@@ -270,12 +278,6 @@ fun ScreenModifiedNotes(
                 contentColor = if (image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground,
                 actions = {
                     IconButton(onClick = {
-                        showBottomSheetForMoreOptions = true
-                    }) {
-                        Icon(Icons.Outlined.AddBox, contentDescription = "Show menu")
-
-                    }
-                    IconButton(onClick = {
                         showBottomSheetForWallpaper = true
                     }) {
                         Icon(Icons.Outlined.Palette, contentDescription = "Change theme")
@@ -301,32 +303,15 @@ fun ScreenModifiedNotes(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-        ) {
-            if (!imageOnNote.isNullOrBlank()) {
-                val resIdImg =
-                    context.resources.getIdentifier(imageOnNote, "drawable", context.packageName)
-                val painter = if (resIdImg != 0) {
-                    painterResource(id = resIdImg)
-                } else {
-                    rememberAsyncImagePainter(imageOnNote)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    contentFocusRequester.requestFocus()
+                    keyboardController?.show()
                 }
-                Image(
-                    painter = painter,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(bottom = 16.dp)
-                        .zIndex(-1f)
-                        .clickable {
-                            Log.e("Nav", "Immagine cliccata")
-                            Log.e("Nav", "Id: $noteId")
-                            navController.navigate("detailsImage/${Uri.encode(imageOnNote)}/${noteId}")
-                        },
-                    contentScale = ContentScale.Crop,
-                )
+        ) {
 
-            }
             OutlinedTextField(
                 value = title,
                 onValueChange = {
@@ -339,7 +324,8 @@ fun ScreenModifiedNotes(
                             title,
                             content,
                             favorite,
-                            image
+                            image,
+                            folderId = folderIdFK
                         ) { id -> noteId = id }
                     }
                 },
@@ -368,7 +354,7 @@ fun ScreenModifiedNotes(
                     fontSize = 24.sp,
                     color = if (image == "wallpaper_4") Color.White else MaterialTheme.colorScheme.onBackground
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().focusRequester(contentFocusRequester)
 
             )
             OutlinedTextField(
@@ -383,7 +369,8 @@ fun ScreenModifiedNotes(
                             title,
                             content,
                             favorite,
-                            image
+                            image,
+                            folderId = folderIdFK
                         ) { id -> noteId = id }
                     }
                 },
@@ -398,7 +385,8 @@ fun ScreenModifiedNotes(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = -16.dp),
+                    .offset(y = -16.dp)
+                    .focusRequester(contentFocusRequester),
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
@@ -416,49 +404,7 @@ fun ScreenModifiedNotes(
 
 
         }
-        if (showBottomSheetForMoreOptions) {
-            ModalBottomSheet(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                sheetState = sheetStateForOptions,
-                onDismissRequest = {
-                    coroutineScope.launch {
-                        sheetStateForOptions.hide()
-                        showBottomSheetForMoreOptions = false
-                    }
-                },
-                tonalElevation = 2.dp,
 
-
-                ) {
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            showBottomSheetForMoreOptions = !showBottomSheetForMoreOptions
-                            sheetStateForOptions.hide()
-                            launcher.launch("image/*")
-
-                        }
-                    },
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Image,
-                            contentDescription = "View Images",
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "Add image")
-                    }
-                }
-            }
-        }
         if (showBottomSheetForWallpaper) {
             ModalBottomSheet(
                 modifier = Modifier
@@ -503,7 +449,8 @@ fun ScreenModifiedNotes(
                                         noteId,
                                         title,
                                         content,
-                                        favorite
+                                        favorite,
+                                        folderId = folderIdFK
                                     ) { id -> noteId = id }
                                     sheetStateForWallpaper.hide()
                                     showBottomSheetForWallpaper = false
@@ -544,7 +491,8 @@ fun ScreenModifiedNotes(
                                         title,
                                         content,
                                         favorite,
-                                        selectedWallpaper
+                                        selectedWallpaper,
+                                        folderId = folderIdFK
                                     ) { id -> noteId = id }
                                     image = selectedWallpaper
                                     Log.e("Wallpaper", selectedWallpaper)
@@ -605,6 +553,7 @@ fun ScreenModifiedNotes(
                             viewModel.unArchiveNote(noteId!!)
                         } else {
                             viewModel.archiveNote(noteId!!)
+                            viewModel.clearNoteFolder(noteId!!)
                         }
                         showDialogForArchive = false
                         navController.navigate("home") {
@@ -623,15 +572,19 @@ fun ScreenModifiedNotes(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            if(folderIdFK != null) {
+                            if (folderIdFK == null) {
+                                coroutineScope.launch {
+                                    delay(500)
+                                    viewModel.clearNoteFolder(noteId ?: 0)
+                                }
+                            } else {
                                 coroutineScope.launch {
                                     delay(500)
                                     viewModel.moveNoteToFolder(noteId ?: 0, folderIdFK ?: 0)
-                                    showDialogForFolder = false
+                                    viewModel.unArchiveNote(noteId!!)
                                 }
-                            } else {
-                                showDialogForFolder = false
                             }
+                            showDialogForFolder = false
                         }
                     ) {
                         Text(text = "Confirm")
@@ -654,6 +607,25 @@ fun ScreenModifiedNotes(
                 },
                 text = {
                     Column {
+                        Card(
+                            onClick = { folderIdFK = null },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            border = if (folderIdFK == null && folderId != null)
+                                BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Icon(Icons.Outlined.FolderOff, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("No folder", style = MaterialTheme.typography.bodyLarge)
+                            }
+                        }
                         allFolderAvailable.forEach { folder ->
                             val isSelected = folderIdFK == folder.id
                             Card(

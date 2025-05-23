@@ -27,11 +27,11 @@ class FirestoreFolderRepository(
         return snapshot.documents.mapNotNull { it.toObject(FolderEntity::class.java) }
     }
 
-    suspend fun deleteFolder(userId: String, id: Int) {
+    suspend fun deleteFolder(userId: String, folderUuid: String) {
         firestore.collection("users")
             .document(userId)
             .collection("folders")
-            .document(id.toString())
+            .document(folderUuid)
             .delete()
             .await()
     }

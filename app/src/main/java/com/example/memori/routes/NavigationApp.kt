@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,10 +31,12 @@ import com.example.memori.auth.GoogleAuthClient
 import com.example.memori.auth.SignInViewModel
 import com.example.memori.auth.SyncChoiceScreen
 import com.example.memori.composable.ArchivePage
-import com.example.memori.composable.DetailsImage
+import com.example.memori.composable.DownloadContentFromCloudToDatabase
 import com.example.memori.composable.FavoritesScreen
 import com.example.memori.composable.FolderNotesScreen
 import com.example.memori.composable.HomeScreen
+import com.example.memori.composable.PinSetupScreen
+import com.example.memori.composable.ProtectedFolderInfoScreen
 import com.example.memori.composable.ScreenModifiedNotes
 import com.example.memori.composable.ScreenNotes
 import com.example.memori.composable.SettingsScreen
@@ -50,12 +53,15 @@ import com.example.memori.setup.SetupCompleteScreen
 import com.example.memori.setup.SetupPage
 import com.example.memori.setup.ThemeSetupPageWrapper
 import com.example.memori.setup.ThemeType
+import com.example.memori.sync.FirestoreNoteRepository
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.app
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api
 @Composable
 fun MainNavigation(
@@ -137,6 +143,31 @@ fun MainNavigation(
             )
         }
 
+        composable("protected_info") {
+            ProtectedFolderInfoScreen(
+                onCancel = {
+                    navController.navigate("home") {
+                        popUpTo("protected_info") {
+                            inclusive = true
+                        }
+                    }
+                },
+                onProceed = {
+                    navController.navigate("pin_setup") {
+                        popUpTo("protected_info") {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
+        composable("pin_setup") {
+            PinSetupScreen(
+                navController = navController
+            )
+        }
+
         composable(route = "choice_theme") {
             ThemeSetupPageWrapper(
                 onThemeSelected = {
@@ -205,25 +236,7 @@ fun MainNavigation(
                 Log.e("Nav", "Id è -1")
             }
         }
-        composable(
-            route = "detailsImage/{pathImg}/{id}",
-            arguments = listOf(
-                navArgument("pathImg") { type = NavType.StringType },
-                navArgument("id") { type = NavType.IntType }
-            )
 
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id") ?: -1
-            val pathImg = Uri.decode(backStackEntry.arguments?.getString("pathImg").toString())
-            Log.e("Nav", "Path: $pathImg")
-            Log.e("Nav", "Id: $id")
-
-            if (id != -1) {
-                DetailsImage(pathImg = pathImg, id = id, navController = navController)
-            } else {
-                Log.e("Nav", "Id è -1, img non disponibile")
-            }
-        }
         composable("archive") {
             ArchivePage(
                 navController = navController
@@ -277,6 +290,8 @@ fun MainNavigation(
             )
 
             LaunchedEffect(key1 = state.isSignInSuccessful) {
+
+
                 if (state.isSignInSuccessful) {
                     Toast.makeText(
                         context,
@@ -289,11 +304,25 @@ fun MainNavigation(
                         folderViewModel.syncAllFolders(userId.toString())
                         noteViewModel.syncAllNotes(userId.toString())
                     }
-                    navController.navigate("setup_complete") {
-                        popUpTo("setup_google_login") {
-                            inclusive = true
+
+                    val query = FirestoreNoteRepository()
+                        .getAllNotesFromCloud(Firebase.auth.currentUser?.uid.toString())
+
+                    if(query.isEmpty()) {
+
+                        navController.navigate("setup_complete") {
+                            popUpTo("setup_google_login") {
+                                inclusive = true
+                            }
+                        }
+                    } else {
+                        navController.navigate("download_note") {
+                            popUpTo("setup_google_login") {
+                                inclusive = true
+                            }
                         }
                     }
+
                 }
             }
 
@@ -322,6 +351,20 @@ fun MainNavigation(
                 }
             )
 
+        }
+
+        composable("download_note") {
+            DownloadContentFromCloudToDatabase(
+                onDownloadComplete = {
+                    scope.launch {
+                        navController.navigate("setup_complete") {
+                            popUpTo("download_note") {
+                                inclusive = true
+                            }
+                        }
+                    }
+                }
+            )
         }
         composable("setup_complete") {
             SetupCompleteScreen(
@@ -383,6 +426,31 @@ fun MainNavigation(
                 Log.e("Nav", "Idfolder è -1")
             }
         }
+
+        composable(
+            route = "modifiedNotes/{noteId}/{folderId}/{folderName}",
+            arguments = listOf(
+                navArgument("noteId") { type = NavType.IntType },
+                navArgument("folderId") { type = NavType.IntType },
+                navArgument("folderName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+
+            val noteId = backStackEntry.arguments?.getInt("noteId") ?: -1
+            val folderId = backStackEntry.arguments?.getInt("folderId") ?: -1
+            val folderName = backStackEntry.arguments?.getString("folderName") ?: ""
+
+            if(folderId != -1) {
+                ScreenModifiedNotes(
+                    id = noteId,
+                    navController = navController,
+                    folderId = folderId,
+                    folderName = folderName
+                )
+            }
+        }
+
+
 
 
 

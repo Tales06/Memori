@@ -17,7 +17,8 @@ import com.example.memori.database.folder_data.FolderEntity
             onDelete = ForeignKey.CASCADE
         ),
     ],
-    indices = [Index("folderId")]
+    indices = [Index("folderId")],
+
 
 )
 data class NotesEntity(
@@ -40,8 +41,6 @@ data class NotesEntity(
     @ColumnInfo(name = "wallpaper")
     val image: String? = null,
 
-    @ColumnInfo(name = "pathImg")
-    val pathImg: String? = null,
 
     @ColumnInfo(name = "last_modified")
     val lastModified: Long = System.currentTimeMillis(),

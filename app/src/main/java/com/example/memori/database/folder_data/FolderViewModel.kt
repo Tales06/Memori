@@ -49,12 +49,12 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel()  {
     }
 
 
-    fun deleteFolder(folderId: Int) {
+    fun deleteFolder(folderId: Int, folderUuid: String) {
         viewModelScope.launch {
             repository.deleteFolder(folderId)
             val userId = Firebase.auth.currentUser?.uid
             if (userId != null) {
-                repoFireStore.deleteFolder(userId, folderId)
+                repoFireStore.deleteFolder(userId, folderUuid)
             }
         }
     }
