@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NoteDao{
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Upsert
     suspend fun insert(note: NotesEntity): Long
 
     @Query("SELECT * FROM notes WHERE archivedNote = 0 AND folderId IS NULL ORDER BY id DESC")

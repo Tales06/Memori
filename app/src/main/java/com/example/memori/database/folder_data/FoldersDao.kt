@@ -5,13 +5,14 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 
 @Dao
 interface FoldersDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertFolder(folder: FolderEntity): Long
 
     @Query("SELECT * FROM folders WHERE user_id IS NULL OR user_id = :userId")
@@ -26,6 +27,8 @@ interface FoldersDao {
 
     @Query("DELETE FROM folders WHERE folder_uuid = :folderUuid OR id = :folderId")
     suspend fun deleteFolder(folderUuid: String? = null, folderId: Int? = null)
+
+
 
 
 }
