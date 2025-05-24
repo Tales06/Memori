@@ -35,4 +35,13 @@ class FirestoreFolderRepository(
             .delete()
             .await()
     }
+
+    suspend fun uploadOneFolder(userId: String, folder: FolderEntity) {
+        firestore.collection("users")
+            .document(userId)
+            .collection("folders")
+            .document(folder.folderUuid)
+            .set(folder)
+            .await()
+    }
 }

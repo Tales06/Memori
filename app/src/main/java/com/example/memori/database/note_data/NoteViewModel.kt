@@ -32,7 +32,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         val userID = Firebase.auth.currentUser?.uid
 
         if(userID != null){
-            repoFireStore.uploadNote(userID, listOf(note))
+            repoFireStore.insertOneNote(userID, note.copy(id = dbId.toInt()))
         }
     }
 
@@ -53,7 +53,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         val userID = Firebase.auth.currentUser?.uid
 
         if (userID != null) {
-            repoFireStore.uploadNote(userID, listOf(note))
+            repoFireStore.uploadOneNote(userID, note)
         }
     }
 
@@ -81,7 +81,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         if (userID != null) {
             val note = repository.getNoteById(noteId).firstOrNull()
             if (note != null) {
-                repoFireStore.uploadNote(userID, listOf(note))
+                repoFireStore.uploadOneNote(userID, note)
             }
         }
 
@@ -94,7 +94,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         if (userID != null) {
             val note = repository.getNoteById(noteId).firstOrNull()
             if (note != null) {
-                repoFireStore.uploadNote(userID, listOf(note))
+                repoFireStore.uploadOneNote(userID, note)
             }
         }
 
@@ -107,7 +107,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         if (userID != null) {
             val note = repository.getNoteById(noteId).firstOrNull()
             if (note != null) {
-                repoFireStore.uploadNote(userID, listOf(note))
+                repoFireStore.uploadOneNote(userID, note)
             }
         }
 
@@ -124,11 +124,14 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         if (userID != null) {
             val note = repository.getNoteById(noteId).firstOrNull()
             if (note != null) {
-                repoFireStore.uploadNote(userID, listOf(note))
+                repoFireStore.uploadOneNote(userID, note)
             }
         }
 
     }
+
+
+
 
 
 

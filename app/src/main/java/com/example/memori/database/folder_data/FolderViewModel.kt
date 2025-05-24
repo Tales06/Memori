@@ -32,12 +32,18 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel()  {
         )
 
         viewModelScope.launch {
-            repository.insert(folder)
+            val existing = repository.getFolderByUuid(folder.folderUuid).firstOrNull()
+            if (existing == null) {
+                repository.insert(folder)
+            } else {
+                // If the folder already exists, you might want to update it instead
+                repository.update(folder)
+            }
         }
 
         if (userId != null) {
             viewModelScope.launch {
-                repoFireStore.uploadFolder(userId, listOf(folder))
+                repoFireStore.uploadOneFolder(userId, folder)
             }
         }
 
@@ -68,9 +74,9 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel()  {
 
             cloudFolders.forEach { folder ->
                 val localDb = repository.getFolderByUuid(folder.folderUuid).firstOrNull()
-                if(localDb == null || folder.lastModified > localDb.lastModified){
+                if(localDb == null){
                     repository.insert(folder)
-                } else {
+                } else if(folder.lastModified > localDb.lastModified){
                     repository.update(folder)
                 }
             }

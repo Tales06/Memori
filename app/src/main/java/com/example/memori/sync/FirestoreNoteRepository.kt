@@ -37,4 +37,24 @@ class FirestoreNoteRepository(
             .await()
     }
 
+    suspend fun insertOneNote(userId: String, note: NotesEntity) {
+        db.collection("users")
+            .document(userId)
+            .collection("notes")
+            .document(note.id.toString())
+            .set(note)
+            .await()
+    }
+
+    suspend fun uploadOneNote(userId: String, note: NotesEntity) {
+        db.collection("users")
+            .document(userId)
+            .collection("notes")
+            .document(note.id.toString())
+            .set(note)
+            .await()
+    }
+
+
+
 }
