@@ -1,6 +1,6 @@
 package com.example.memori
 
-import ButtonNote
+import com.example.memori.composable.ButtonNote
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
