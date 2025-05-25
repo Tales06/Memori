@@ -280,7 +280,7 @@ fun MainNavigation(
                             UserPreferences.isSyncEnabled(context).collect {
                                 if (it) {
                                     val userID = Firebase.auth.currentUser?.uid ?: return@collect
-                                    folderViewModel.syncAllFolders(userID)
+                                    folderViewModel.syncAllFolders(userID, context)
                                     noteViewModel.syncAllNotes(userID)
                                 }
                             }
@@ -301,7 +301,7 @@ fun MainNavigation(
                     Log.e("Valore di isSignIn launch nav", state.isSignInSuccessful.toString())
                     scope.launch {
                         val userId = Firebase.auth.currentUser?.uid
-                        folderViewModel.syncAllFolders(userId.toString())
+                        folderViewModel.syncAllFolders(userId.toString(), context)
                         noteViewModel.syncAllNotes(userId.toString())
                     }
 

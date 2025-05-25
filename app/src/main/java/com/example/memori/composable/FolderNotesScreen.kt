@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DriveFileRenameOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.DriveFileMove
@@ -113,12 +114,20 @@ fun FolderNotesScreen(
     var showDialogForDelete by remember { mutableStateOf(false) }
     var showDialogForMoveToAnotherFolder by remember { mutableStateOf(false) }
     var showPinDialog by remember { mutableStateOf(false) }
+    var showRenameFolderName by remember { mutableStateOf(false) }
+
     var pinInput by remember { mutableStateOf("") }
     val pinHash by context.pinHashFlow().collectAsState(initial = null)
 
     val scope = rememberCoroutineScope()
 
     var destFolderId by remember { mutableStateOf<Int?>(folderId) }
+
+    var folderNameToShow by remember { mutableStateOf(folderName) }
+    val thisFolderUuid = remember(folderId, foldersState) {
+        foldersState.firstOrNull { it.id == folderId }?.folderUuid
+    }
+
     LaunchedEffect(showDialogForMoveToAnotherFolder) {
         if (showDialogForMoveToAnotherFolder) {
             // all’apertura del dialog pre‐seleziono la cartella corrente
@@ -174,7 +183,7 @@ fun FolderNotesScreen(
             } else {
 
                 TopAppBar(
-                    title = { Text(text = folderName) },
+                    title = { Text(text = folderNameToShow) },
                     navigationIcon = {
                         IconButton(
                             onClick = {
@@ -198,6 +207,17 @@ fun FolderNotesScreen(
                             Icon(
                                 imageVector = Icons.Filled.Delete,
                                 contentDescription = "Delete",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                showRenameFolderName = true
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DriveFileRenameOutline,
+                                contentDescription = "Rename Folder",
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -277,6 +297,60 @@ fun FolderNotesScreen(
                     "Are you sure you want to delete all notes in this folder? This action cannot be undone."
                 },
                 icon = Icons.Filled.Delete,
+            )
+        }
+
+        if( showRenameFolderName) {
+            var newFolderName by remember { mutableStateOf(folderName) }
+            AlertDialog(
+                onDismissRequest = { showRenameFolderName = false },
+                title = { Text("Rename Folder") },
+                text = {
+                    OutlinedTextField(
+                        value = newFolderName,
+                        onValueChange = { newFolderName = it },
+                        label = { Text("New Folder Name") },
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val folderExist =
+                            foldersState.any { it.folderName == newFolderName.trim() }
+                        if (folderExist) {
+                            Toast.makeText(
+                                context,
+                                "Folder already exists. Please choose a different name.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@TextButton
+                        } else if (newFolderName.contains(" ")) {
+                            Toast.makeText(
+                                context,
+                                "Please insert a name for the folder without spaces",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@TextButton
+
+
+                        }
+
+                        if (newFolderName.isNotBlank()) {
+                            thisFolderUuid?.let { folderUuid ->
+                                viewModelFolder.renameFolder(folderUuid, newFolderName)
+                            }
+                            showRenameFolderName = false
+                            folderNameToShow = newFolderName
+                        }
+                    }) {
+                        Text("Rename")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRenameFolderName = false }) {
+                        Text("Cancel")
+                    }
+                }
             )
         }
 

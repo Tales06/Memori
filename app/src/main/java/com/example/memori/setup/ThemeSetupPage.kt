@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -161,40 +162,63 @@ fun ThemeOptionBox(label: String, color: Color, selected: Boolean, onClick: () -
         animationSpec = tween(300)
     )
 
-    Surface(
+    Box(
         modifier = Modifier
             .size(110.dp)
             .padding(4.dp)
-            .clip(RoundedCornerShape(20.dp))
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
             .clickable { onClick() },
-        shadowElevation = if (selected) 8.dp else 2.dp,
-        border = if (selected) BorderStroke(2.dp, borderColor) else null,
-        color = MaterialTheme.colorScheme.surface
+        contentAlignment = Alignment.TopEnd
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Surface(
+            shadowElevation = if (selected) 8.dp else 2.dp,
+            border = BorderStroke(2.dp, borderColor),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxSize()
         ) {
-            Surface(
-                modifier = Modifier.size(50.dp),
-                color = color,
-                shape = RoundedCornerShape(12.dp),
-                shadowElevation = 4.dp
-            ) {}
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Surface(
+                    modifier = Modifier.size(50.dp),
+                    color = color,
+                    shape = RoundedCornerShape(12.dp),
+                    shadowElevation = 4.dp
+                ) {}
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = label,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface
+                Text(
+                    text = label,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        // Check icon when selected
+        AnimatedVisibility(
+            visible = selected,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut()
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = "Selected",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(4.dp)
             )
         }
     }

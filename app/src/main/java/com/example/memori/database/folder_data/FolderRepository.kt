@@ -14,6 +14,9 @@ class FolderRepository(private val foldersDao: FoldersDao) {
 
     suspend fun update(folder: FolderEntity) = foldersDao.updateFolder(folder)
 
+    suspend fun updateFolderName(folderUuid: String, folderName: String, newLastModified: Long = System.currentTimeMillis()) =
+        foldersDao.updateFolderName(folderUuid, folderName, newLastModified)
+
     suspend fun deleteFolder(folderId: Int) = foldersDao.deleteFolder(folderId = folderId)
 
 

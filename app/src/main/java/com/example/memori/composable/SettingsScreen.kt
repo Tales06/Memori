@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,6 +79,7 @@ fun SettingsScreen(
 
 
 ) {
+
 
 
     val state by signInViewModel.state.collectAsStateWithLifecycle()
@@ -220,7 +222,7 @@ fun SettingsScreen(
                     onDismissRequest = { showDialog = false },
                     onConfirmation = {
                         val userID = Firebase.auth.currentUser?.uid ?: return@GenericAlertDialog
-                        folderViewModel.syncAllFolders(userID)
+                        folderViewModel.syncAllFolders(userID, context)
                         viewModel.syncAllNotes(userID)
                         showDialog = false
 

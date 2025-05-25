@@ -44,4 +44,24 @@ class FirestoreFolderRepository(
             .set(folder)
             .await()
     }
+
+    suspend fun renameFolder(
+        userId: String,
+        folderUuid: String,
+        newName: String,
+        newLastModified: Long
+    ) {
+
+        val changhes = mapOf(
+            "folderName" to newName,
+            "lastModified" to newLastModified
+        )
+
+        firestore.collection("users")
+            .document(userId)
+            .collection("folders")
+            .document(folderUuid)
+            .update(changhes)
+            .await()
+    }
 }

@@ -283,7 +283,7 @@ fun ArchivePage(
                     TextButton(onClick = {
                         if (folderName.isNotBlank()) {
                             // Salva nel database
-                            folderViewModel.createFolder(folderName.trim())
+                            folderViewModel.createFolder(folderName.trim(), context)
                         }
                         folderName = ""
                         showFolderDialog = false

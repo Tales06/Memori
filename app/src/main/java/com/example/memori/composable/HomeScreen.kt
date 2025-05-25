@@ -444,7 +444,7 @@ fun HomeScreen(
                         if (folderExist) {
                             Toast.makeText(
                                 context,
-                                "Folder already exists",
+                                "Folder already exists. Please choose a different name.",
                                 Toast.LENGTH_SHORT
                             ).show()
                             return@TextButton
@@ -461,7 +461,7 @@ fun HomeScreen(
 
                         if (folderName.isNotBlank()) {
                             // Salva nel database
-                            folderViewModel.createFolder(folderName.trim())
+                            folderViewModel.createFolder(folderName.trim(), context)
                         }
                         folderName = ""
                         showFolderDialog = false

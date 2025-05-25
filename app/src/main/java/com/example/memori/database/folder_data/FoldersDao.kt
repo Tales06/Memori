@@ -28,7 +28,8 @@ interface FoldersDao {
     @Query("DELETE FROM folders WHERE folder_uuid = :folderUuid OR id = :folderId")
     suspend fun deleteFolder(folderUuid: String? = null, folderId: Int? = null)
 
-
+    @Query("UPDATE folders SET folder_name = :folderName, last_modified = :newLastModified WHERE folder_uuid = :folderUuid")
+    suspend fun updateFolderName(folderUuid: String, folderName: String, newLastModified: Long = System.currentTimeMillis())
 
 
 }

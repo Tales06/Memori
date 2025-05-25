@@ -10,7 +10,7 @@ import com.example.memori.database.note_data.NoteDao
 import com.example.memori.database.note_data.NotesEntity
 
 
-@Database(entities = [NotesEntity::class, FolderEntity::class], version = 19, exportSchema = false)
+@Database(entities = [NotesEntity::class, FolderEntity::class], version = 20, exportSchema = false)
 abstract class NoteDatabase: RoomDatabase(){
 
     abstract fun noteDao(): NoteDao

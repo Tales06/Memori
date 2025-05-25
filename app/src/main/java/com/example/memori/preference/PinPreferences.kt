@@ -29,4 +29,8 @@ object PinPreferences {
             preferences.remove(PIN_HASH_KEY)
         }
     }
+
+    suspend fun Context.getPinHash(): String? {
+        return pinHashFlow().first()
+    }
 }
