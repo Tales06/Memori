@@ -1,6 +1,7 @@
 package com.example.memori.routes
 
 import android.app.Activity.RESULT_OK
+import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -12,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,6 +49,9 @@ import com.example.memori.database.NoteDatabase
 import com.example.memori.database.note_data.NoteViewModel
 import com.example.memori.database.note_data.NoteViewModelFactory
 import com.example.memori.database.note_data.NotesRepository
+import com.example.memori.database.theme_data.ThemeViewModel
+import com.example.memori.database.theme_data.ThemeViewModelFactory
+import com.example.memori.preference.ThemePreferences
 import com.example.memori.preference.UserPreferences
 import com.example.memori.preference.setHasSeenSetup
 import com.example.memori.setup.SetupCompleteScreen
@@ -99,6 +104,13 @@ fun MainNavigation(
             )
         )
     )
+
+    val themeViewModel: ThemeViewModel = viewModel(
+        factory = ThemeViewModelFactory(
+            app = context.applicationContext as Application
+        )
+    )
+
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     val sysBarColorScheme = MaterialTheme.colorScheme
@@ -186,9 +198,13 @@ fun MainNavigation(
         }
 
         composable(route = "set_theme_on_settings") {
+            val currentTheme by themeViewModel.selectedTheme.collectAsState()
+
             ThemeSetupPageWrapper(
-                onThemeSelected = {
-                    onThemeSelected(it)
+                initialTheme = currentTheme,
+                onThemeSelected = { type ->
+                    themeViewModel.setTheme(type)
+                    onThemeSelected(type)
                 },
                 onContinue = {
                     navController.navigate("settings") {
