@@ -47,7 +47,6 @@ User actions → ViewModel → local DB or cloud/AI → updated state → UI ref
 UI:JetpackComposeUI --|> ViewModel:NoteViewModel  
 UI:JetpackComposeUI --> ViewModel:FolderViewModel  
 UI:JetpackComposeUI --> ViewModel:SignInViewModel  
-UI:JetpackComposeUI --> ViewModel:GenerativeViewModel  
 ViewModel:NoteViewModel --> LocalDB:RoomDatabase (NoteDatabase & DAO)  
 ViewModel:NoteViewModel --> CloudDB:Firestore (NoteRepository)  
 ViewModel:FolderViewModel --> LocalDB:RoomDatabase (NoteDatabase)  
