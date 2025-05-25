@@ -13,9 +13,6 @@
 - **Optional cloud sync:**  
   Sign in with Google to enable backup and sync of notes to the cloud. Uses **Firebase Authentication** (Google sign-in) and **Cloud Firestore** for real-time storage. Sync is bidirectional: local notes upload, existing cloud notes download at startup. You can also skip login and use the app fully offline.
 
-- **Generative AI integration:**  
-  Experimentally generate text content from images and prompts via the **Google Generative AI** API (Gemini model). Send an image and descriptive prompt; receive auto-generated text (e.g., description or short story) inserted into the note.
-
 - **Customizable experience:**  
   On first launch, choose theme (Light, Dark, or System default). UI built with **Jetpack Compose** (Material3) for a modern, responsive design. Includes trash/archive, favorites, and guided setup screens.
 
@@ -30,7 +27,6 @@ Memori follows an **MVVM (Model-View-ViewModel)** pattern:
    - `NoteViewModel`: CRUD operations for notes  
    - `FolderViewModel`: Folder management  
    - `SignInViewModel`: Login state  
-   - `GenerativeViewModel`: Calls AI model  
    They interact with repositories and services, then expose state to the UI.
 
 3. **Data Layer (Models/Repositories):**  
@@ -41,7 +37,6 @@ Memori follows an **MVVM (Model-View-ViewModel)** pattern:
 
 4. **External Services:**  
    - **Firebase Auth & Firestore** for cloud backend  
-   - **Google Generative AI SDK** for text generation  
 
 User actions → ViewModel → local DB or cloud/AI → updated state → UI reflects changes immediately.
 
@@ -52,16 +47,13 @@ User actions → ViewModel → local DB or cloud/AI → updated state → UI ref
 UI:JetpackComposeUI --|> ViewModel:NoteViewModel  
 UI:JetpackComposeUI --> ViewModel:FolderViewModel  
 UI:JetpackComposeUI --> ViewModel:SignInViewModel  
-UI:JetpackComposeUI --> ViewModel:GenerativeViewModel  
 ViewModel:NoteViewModel --> LocalDB:RoomDatabase (NoteDatabase & DAO)  
 ViewModel:NoteViewModel --> CloudDB:Firestore (NoteRepository)  
 ViewModel:FolderViewModel --> LocalDB:RoomDatabase (NoteDatabase)  
 ViewModel:FolderViewModel --> CloudDB:Firestore (FolderRepository)  
 ViewModel:SignInViewModel --> Auth:GoogleAuthClient (Firebase Auth)  
-ViewModel:GenerativeViewModel --> Service:GoogleGenerativeAI (Gemini model)  
 
 # Flows (Example Flows)
 User -> UI -> NoteViewModel -> NoteDatabase  
 NoteDatabase -> Firestore (sync if online)  
 User -> UI -> SignInViewModel -> GoogleAuthClient -> Firestore enabled  
-User -> UI -> GenerativeViewModel -> GoogleGenerativeAI -> GeneratedText
