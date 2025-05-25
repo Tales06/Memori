@@ -1,3 +1,12 @@
+/**
+ * Factory class for creating instances of [NoteViewModel] with a [NotesRepository] dependency.
+ *
+ * This factory is used to provide the [NoteViewModel] with the required repository when using
+ * the ViewModelProvider. It ensures that the ViewModel is constructed with the necessary
+ * dependencies for accessing and managing note data.
+ *
+ * @property repository The [NotesRepository] instance to be provided to the [NoteViewModel].
+ */
 package com.example.memori.database.note_data
 
 import androidx.lifecycle.ViewModel

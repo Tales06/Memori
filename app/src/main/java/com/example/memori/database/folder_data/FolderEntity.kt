@@ -1,3 +1,14 @@
+/**
+ * Represents a folder entity in the Room database.
+ *
+ * @property id Auto-generated primary key for the folder.
+ * @property folderUuid Unique identifier for the folder, generated as a UUID.
+ * @property folderName Name of the folder.
+ * @property userId Identifier of the user who owns the folder; nullable.
+ * @property lastModified Timestamp of the last modification to the folder, in milliseconds.
+ * @property isProtected Indicates whether the folder is protected.
+ * @property encryptedPin Encrypted PIN for folder protection; nullable.
+ */
 package com.example.memori.database.folder_data
 
 import androidx.room.ColumnInfo

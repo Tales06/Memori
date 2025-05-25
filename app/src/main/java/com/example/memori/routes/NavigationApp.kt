@@ -1,3 +1,26 @@
+/**
+ * MainNavigation is the central composable function responsible for handling the navigation graph
+ * of the Memori app. It defines all navigation routes, their arguments, and the corresponding
+ * composable screens to display for each route.
+ *
+ * @param navController The NavHostController used to manage app navigation.
+ * @param modifier Modifier for styling and layout adjustments.
+ * @param showWelcome Boolean flag to determine if the setup flow should be shown as the start destination.
+ * @param searchExpanded Boolean indicating if the search UI is expanded.
+ * @param onThemeSelected Callback invoked when a theme is selected during setup or in settings.
+ * @param onSearchExpanded Callback invoked when the search expansion state changes.
+ * @param context The Android Context, required for various operations such as accessing preferences and databases.
+ *
+ * This function:
+ * - Initializes required ViewModels and repositories for notes, folders, and themes.
+ * - Handles Google authentication and sync logic with Firebase.
+ * - Sets up system UI colors using Accompanist.
+ * - Defines navigation routes for home, setup, authentication, folder/note details, settings, and more.
+ * - Manages navigation transitions and state updates based on user actions and authentication results.
+ *
+ * All navigation destinations are defined within the NavHost, and each composable screen receives
+ * the necessary dependencies and callbacks for proper operation.
+ */
 package com.example.memori.routes
 
 import android.app.Activity.RESULT_OK
@@ -79,6 +102,66 @@ fun MainNavigation(
     context: Context,
 
 ) {
+    /**
+     * Sets up the main navigation graph of the application using Jetpack Compose's [NavHost].
+     *
+     * This function initializes and provides all necessary ViewModels and repositories, manages the theme and system UI colors,
+     * and handles user authentication and synchronization with Firebase and Google Sign-In.
+     *
+     * Included navigation destinations:
+     * - Home, Favorites, Settings, Archive, and Setup screens
+     * - Theme selection and configuration
+     * - Google Sign-In and sync configuration
+     * - Folder and note management, including protected and edited notes
+     * - Downloading notes from the cloud and setup completion
+     *
+     * Main features:
+     * - Initializes ViewModels for authentication, notes, folders, and theme management
+     * - Handles Google authentication and sync preferences
+     * - Updates system bar and navigation bar colors based on the current theme
+     * - Navigates between screens based on user actions and authentication state
+     * - Supports passing arguments (IDs, names) between composable destinations
+     * - Ensures correct navigation stack management with `popUpTo` and `inclusive` flags
+     *
+     * @param navController The [NavHostController] used for navigation between composable destinations.
+     * @param context The current [Context] used for initializing ViewModels and repositories.
+     * @param showWelcome Boolean flag to determine whether to show the welcome/setup flow.
+     * @param searchExpanded Boolean flag indicating if the search UI is expanded.
+     * @param onSearchExpanded Callback to handle changes in the search expansion state.
+     * @param onThemeSelected Callback invoked when a theme is selected.
+     */
+
+
+    /**
+     * Imposta il grafo di navigazione principale dell'applicazione utilizzando [NavHost] di Jetpack Compose.
+     *
+     * Questa funzione inizializza e fornisce tutte le ViewModel e repository necessari, gestisce il tema e i colori della UI di sistema,
+     * e si occupa dell'autenticazione utente e della sincronizzazione con Firebase e Google Sign-In.
+     *
+     * Destinazioni di navigazione incluse:
+     * - Schermate Home, Preferiti, Impostazioni, Archivio e Setup
+     * - Selezione e configurazione del tema
+     * - Google Sign-In e configurazione della sincronizzazione
+     * - Gestione di cartelle e note, incluse note protette e modificate
+     * - Download delle note dal cloud e completamento del setup
+     *
+     * Caratteristiche principali:
+     * - Inizializza le ViewModel per autenticazione, note, cartelle e gestione del tema
+     * - Gestisce autenticazione Google e preferenze di sincronizzazione
+     * - Aggiorna i colori della barra di sistema e della barra di navigazione in base al tema corrente
+     * - Naviga tra le schermate in base alle azioni dell'utente e allo stato di autenticazione
+     * - Supporta il passaggio di argomenti (ID, nomi) tra le destinazioni composable
+     * - Garantisce una corretta gestione dello stack di navigazione con `popUpTo` e flag `inclusive`
+     *
+     * @param navController Il [NavHostController] utilizzato per la navigazione tra le destinazioni composable.
+     * @param context Il [Context] corrente utilizzato per l'inizializzazione di ViewModel e repository.
+     * @param showWelcome Flag booleano per determinare se mostrare il flusso di benvenuto/setup.
+     * @param searchExpanded Flag booleano che indica se la UI di ricerca è espansa.
+     * @param onSearchExpanded Callback per gestire i cambiamenti dello stato di espansione della ricerca.
+     * @param onThemeSelected Callback invocato quando viene selezionato un tema.
+     */
+
+
     val scope = rememberCoroutineScope()
     val googleAuthClient by lazy {
 
@@ -117,6 +200,23 @@ fun MainNavigation(
 
     val systemUiController = rememberSystemUiController()
 
+
+
+    /**
+     * Launches a side-effect that performs the following actions:
+     * - Checks if the user is already signed in using the provided Google authentication client.
+     * - Retrieves the user's sync preference from [UserPreferences].
+     * - If sync is enabled and a user is signed in, triggers synchronization of all notes for the user via [noteViewModel].
+     * - Logs the sync status ("Sync Enabled" or "Sync Disabled").
+     * - Sets the system bars and navigation bar colors using the provided [sysBarColorScheme] and [systemUiController].
+     *
+     * @param sysBarColorScheme The color scheme to apply to system bars.
+     * @param systemUiController Controller to manage system UI colors.
+     * @param viewModel The ViewModel responsible for authentication checks.
+     * @param googleAuthClient The Google authentication client.
+     * @param context The current context, used to access user preferences.
+     * @param noteViewModel The ViewModel responsible for note synchronization.
+     */
     LaunchedEffect(Unit, sysBarColorScheme) {
         val user = Firebase.auth.currentUser
 
@@ -272,6 +372,31 @@ fun MainNavigation(
             )
         }
 
+        /**
+         * Composable route for handling Google Sign-In setup within the app's navigation.
+         *
+         * This route manages the Google authentication flow, user preferences for sync, and navigation
+         * based on the sign-in result. It uses a launcher for the Google sign-in intent and processes
+         * the result asynchronously. Upon successful sign-in, it updates the user account, enables sync,
+         * and triggers synchronization of folders and notes with Firebase. Depending on whether the user
+         * has existing notes in the cloud, it navigates to either the setup completion or note download screen.
+         *
+         * UI is provided by [SignInScreen], which allows the user to initiate sign-in, go back, or skip the process.
+         *
+         * Key responsibilities:
+         * - Launches Google sign-in and handles the result.
+         * - Updates user preferences and triggers data synchronization.
+         * - Navigates to appropriate screens based on sign-in and cloud data state.
+         * - Displays a toast message upon successful login.
+         *
+         * Dependencies:
+         * - [googleAuthClient]: Handles Google authentication.
+         * - [viewModel]: Manages sign-in state and user account.
+         * - [folderViewModel], [noteViewModel]: Handle folder and note synchronization.
+         * - [UserPreferences]: Manages sync preferences.
+         * - [FirestoreNoteRepository]: Accesses notes in the cloud.
+         * - [navController]: Controls navigation between screens.
+         */
         composable("setup_google_login") {
 
             val context = LocalContext.current
@@ -443,6 +568,21 @@ fun MainNavigation(
             }
         }
 
+        /**
+         * Defines a composable navigation route for displaying or modifying notes within a specific folder.
+         *
+         * Route: "modifiedNotes/{noteId}/{folderId}/{folderName}"
+         *
+         * Arguments:
+         * - noteId (Int): The unique identifier of the note to be modified.
+         * - folderId (Int): The unique identifier of the folder containing the note.
+         * - folderName (String): The name of the folder containing the note.
+         *
+         * Behavior:
+         * - Extracts the noteId, folderId, and folderName from the navigation arguments.
+         * - If a valid folderId is provided (not -1), it displays the [ScreenModifiedNotes] composable,
+         *   passing the extracted noteId, folderId, folderName, and the navigation controller.
+         */
         composable(
             route = "modifiedNotes/{noteId}/{folderId}/{folderName}",
             arguments = listOf(
@@ -450,6 +590,13 @@ fun MainNavigation(
                 navArgument("folderId") { type = NavType.IntType },
                 navArgument("folderName") { type = NavType.StringType }
             )
+        /**
+         * Lambda expression that receives a [NavBackStackEntry] as a parameter.
+         * Typically used in Jetpack Compose navigation to define the content
+         * that should be displayed for a particular navigation destination.
+         *
+         * @param backStackEntry The navigation back stack entry associated with the current destination.
+         */
         ) { backStackEntry ->
 
             val noteId = backStackEntry.arguments?.getInt("noteId") ?: -1

@@ -1,3 +1,11 @@
+/**
+ * Displays the "Setup Complete" screen after the user has finished the setup process.
+ *
+ * This composable shows a congratulatory message, a brief note about changing settings later,
+ * and a button to continue to the main part of the app. It also includes an animated background.
+ *
+ * @param onContinue Callback invoked when the user taps the "Go to the app" button.
+ */
 package com.example.memori.setup
 
 import androidx.compose.foundation.clickable

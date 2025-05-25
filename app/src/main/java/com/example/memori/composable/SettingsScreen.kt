@@ -56,6 +56,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+/**
+ * Displays the Settings screen of the application, allowing users to manage their profile,
+ * theme preferences, and synchronization settings.
+ *
+ * @param navController The [NavHostController] used for navigation between screens.
+ * @param context The [Context] used for accessing resources and preferences.
+ * @param signInViewModel The [SignInViewModel] managing Google sign-in state and actions.
+ * @param viewModel The [NoteViewModel] for managing note data (default provided).
+ * @param folderViewModel The [FolderViewModel] for managing folder data (default provided).
+ *
+ * This composable provides:
+ * - User profile display and Google sign-in/out functionality.
+ * - Theme selection and navigation to theme settings.
+ * - Synchronization management for notes and folders with cloud support.
+ * - Dialog prompts for enabling/disabling synchronization.
+ * - Loading indicator during sign-in/out processes.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(
@@ -82,6 +99,7 @@ fun SettingsScreen(
 
 
 
+
     val state by signInViewModel.state.collectAsStateWithLifecycle()
     val googleAuthClient by remember { mutableStateOf(GoogleAuthClient(context)) }
     val isLoading by signInViewModel.isLoading.collectAsStateWithLifecycle()
@@ -92,6 +110,17 @@ fun SettingsScreen(
 
     val isSyncEnabled = UserPreferences.isSyncEnabled(context).collectAsState(initial = false).value
 
+    /**
+     * Remembers a launcher for the Google Sign-In activity result.
+     *
+     * When the sign-in activity returns a result, this launcher checks if the result is successful (`RESULT_OK`).
+     * If successful, it launches a coroutine to:
+     * 1. Sign in with the returned intent data using `googleAuthClient`.
+     * 2. Passes the sign-in result to the `signInViewModel`.
+     * 3. Updates the account information in the `signInViewModel` with the currently signed-in user.
+     *
+     * This is typically used to handle Google authentication flow in a Jetpack Compose screen.
+     */
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
@@ -111,6 +140,15 @@ fun SettingsScreen(
 
     val iconForTheme = ThemePreferences.getTheme(context).collectAsState(initial = "SYSTEM").value
 
+
+    /**
+     * Observes changes to [state.isSignInSuccessful] using [LaunchedEffect].
+     * When sign-in is successful, waits for 1.5 seconds, then displays a "Login successful" toast message.
+     * Logs the value of [state.isSignInSuccessful] before and after the delay for debugging purposes.
+     *
+     * @param state The current state containing the sign-in status.
+     * @param context The context used to display the toast message.
+     */
     LaunchedEffect(state.isSignInSuccessful) {
         Log.e("Dentro al launchedeffect valore di isSignIn", state.isSignInSuccessful.toString())
         if(state.isSignInSuccessful){
@@ -216,6 +254,21 @@ fun SettingsScreen(
                 }
             )
 
+            /**
+             * Displays a confirmation dialog for enabling or disabling synchronization.
+             *
+             * When `showDialog` is true, this dialog prompts the user to confirm their action regarding synchronization.
+             * - If the user confirms, it retrieves the current user's ID from Firebase Authentication.
+             * - Calls `syncAllFolders` on `folderViewModel` and `syncAllNotes` on `viewModel` to perform synchronization actions.
+             * - The dialog is dismissed after the action.
+             *
+             * @param showDialog Controls the visibility of the dialog.
+             * @param onDismissRequest Callback to handle dialog dismissal.
+             * @param onConfirmation Callback executed when the user confirms the action.
+             * @param dialogTitle The title displayed at the top of the dialog.
+             * @param dialogText The message shown in the dialog, which changes based on the synchronization state.
+             * @param icon The icon displayed in the dialog, representing synchronization.
+             */
             if(showDialog){
 
                 GenericAlertDialog(
@@ -241,6 +294,17 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * Displays a generic alert dialog with customizable title, text, icon, and actions.
+ *
+ * @param onDismissRequest Callback invoked when the dialog is dismissed.
+ * @param onConfirmation Callback invoked when the confirm button is clicked.
+ * @param dialogTitle The title text to display in the dialog.
+ * @param dialogText The main message text to display in the dialog.
+ * @param icon The icon to display at the top of the dialog.
+ *
+ * This composable shows an [AlertDialog] with a confirm and dismiss button.
+ */
 @Composable
 fun GenericAlertDialog(
     onDismissRequest: () -> Unit,
@@ -283,6 +347,14 @@ fun GenericAlertDialog(
     )
 }
 
+/**
+ * A composable function that displays a settings card with a title, icon, content, and an edit button.
+ *
+ * @param title The title text to display on the card.
+ * @param icon The [ImageVector] icon to display at the start of the card.
+ * @param content The content or description text to display below the title.
+ * @param onClick The callback to be invoked when the "Edit" button is clicked.
+ */
 @Composable
 fun SettingCard(
     title: String,
@@ -315,6 +387,17 @@ fun SettingCard(
 }
 
 
+/**
+ * Composable function that displays the user's profile information in a card layout.
+ *
+ * @param account The [UserData] object containing the user's account information, or null if not signed in.
+ * @param onSignOut Lambda function to be invoked when the user clicks the "Logout" button.
+ * @param onSignIn Lambda function to be invoked when the user clicks the "Login" button.
+ * @param state The [SignInState] object representing the current sign-in state.
+ *
+ * The card displays the user's profile picture (or a default icon if not available), username,
+ * and a button that toggles between "Login" and "Logout" based on the sign-in state.
+ */
 @Composable
 fun ProfileScreen(
     account: UserData?,

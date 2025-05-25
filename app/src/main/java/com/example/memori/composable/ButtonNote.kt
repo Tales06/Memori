@@ -1,19 +1,10 @@
-package com.example.memori.composable
-
-
-
-import androidx.compose.foundation.background
-import androidx.compose.runtime.Composable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.*
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.ui.*
-import androidx.compose.ui.unit.*
-import androidx.navigation.NavController
-import com.example.memori.theme.MyPalette
-
+/**
+ * Composable function that displays an extended floating action button (FAB)
+ * in the bottom right corner of the screen. When pressed, it navigates to the
+ * note creation screen ("pageNotes") while preserving the state of the "home" screen.
+ *
+ * @param navController The NavController used for navigation between screens.
+ */
 @Composable
 fun ButtonNote(navController: NavController){
     Box(modifier = Modifier.fillMaxSize(),){
@@ -33,16 +24,3 @@ fun ButtonNote(navController: NavController){
         )
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

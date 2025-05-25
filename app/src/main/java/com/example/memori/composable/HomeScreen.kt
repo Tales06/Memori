@@ -1,3 +1,24 @@
+/**
+ * Composable function that represents the Home screen of the Memori app.
+ *
+ * This screen provides the main interface for viewing, searching, and managing notes and folders.
+ * It includes a navigation drawer for accessing different sections such as Home, Archive, Protected Folder,
+ * and custom folders. Users can create new folders, move notes between folders, and perform batch actions
+ * like deleting or moving multiple notes.
+ *
+ * Features:
+ * - Navigation drawer with Home, Archive, Protected Folder, and folder management.
+ * - Search bar for filtering notes.
+ * - List of notes with support for selection mode (multi-select for batch actions).
+ * - Dialogs for PIN entry (to access protected folder), folder creation, and moving notes to folders.
+ * - Displays a random kaomoji and message when there are no notes.
+ *
+ * @param navController The NavController used for navigation between screens.
+ * @param noteViewModel The ViewModel for managing notes. Defaults to a ViewModel with repository injection.
+ * @param folderViewModel The ViewModel for managing folders. Defaults to a ViewModel with repository injection.
+ * @param searchExpanded Boolean flag indicating if the search bar is expanded.
+ * @param onSearchExpanded Callback to handle changes to the search bar's expanded state.
+ */
 package com.example.memori.composable
 
 import android.util.Log
@@ -134,7 +155,11 @@ val kaomoji: List<String> = listOf(
 @ExperimentalMaterial3Api
 @Composable
 fun HomeScreen(
+
+    // The NavController used for navigation between screens.
     navController: NavController,
+
+    // ViewModels for managing notes and folders, using factory injection for repositories.
     noteViewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
             repository = NotesRepository(
@@ -142,6 +167,8 @@ fun HomeScreen(
             )
         )
     ),
+
+    // ViewModel for managing folders, using factory injection for the repository.
     folderViewModel: FolderViewModel = viewModel(
         factory = FolderViewModelFactory(
             repository = FolderRepository(
@@ -150,9 +177,14 @@ fun HomeScreen(
         )
     ),
 
+    // Boolean flag indicating if the search bar is expanded.
     searchExpanded: Boolean,
+
+    // Callback to handle changes to the search bar's expanded state.
     onSearchExpanded: (Boolean) -> Unit
 ) {
+
+    // Get the current context for accessing resources and preferences.
     val context = LocalContext.current
 
     val notesState by noteViewModel.allNotes.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -173,8 +205,7 @@ fun HomeScreen(
     var pinVisible by remember { mutableStateOf(false) }
     val pinValid = pinInput.length in 4..6
 
-
-    // Osserva il comportamento dello scroll
+    // Observe the first visible item index and scroll offset to determine if the search bar should be visible.
     LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
         isSearchBarVisible =
             listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset < 10
@@ -198,7 +229,7 @@ fun HomeScreen(
     var selectedFolder by remember { mutableStateOf<Int?>(null) }
 
 
-
+    // Open the drawer when the Home screen is displayed.
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -438,7 +469,6 @@ fun HomeScreen(
                 onDismissRequest = { showFolderDialog = false },
                 confirmButton = {
                     TextButton(onClick = {
-                        //Controllo se esiste già una cartella con lo stesso nome
                         val folderExist =
                             foldersState.any { it.folderName == folderName.trim() }
                         if (folderExist) {
@@ -460,7 +490,6 @@ fun HomeScreen(
                         }
 
                         if (folderName.isNotBlank()) {
-                            // Salva nel database
                             folderViewModel.createFolder(folderName.trim(), context)
                         }
                         folderName = ""

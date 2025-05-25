@@ -1,3 +1,25 @@
+/**
+ * Composable screen for setting up a PIN to protect user notes.
+ *
+ * This screen allows the user to enter and confirm a numeric PIN (4-6 digits).
+ * The PIN is hashed using SHA-256 and saved securely via DataStore.
+ * Upon successful setup, a protected folder is created and the user is navigated to it.
+ *
+ * @param navController The NavController used for navigation.
+ * @param folderViewModel The ViewModel for folder operations, injected by default.
+ *
+ * UI Features:
+ * - Animated background.
+ * - Card layout with PIN and confirmation fields.
+ * - PIN visibility toggle for both fields.
+ * - Real-time validation for PIN length and matching.
+ * - Error messages for invalid input.
+ * - Confirmation button enabled only when input is valid.
+ *
+ * Security:
+ * - PIN is never stored in plain text; only its SHA-256 hash is saved.
+ * - Protected folder is created after successful PIN setup.
+ */
 package com.example.memori.composable
 
 import android.widget.Toast

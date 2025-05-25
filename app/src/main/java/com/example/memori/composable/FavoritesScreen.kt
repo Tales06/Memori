@@ -1,6 +1,5 @@
 package com.example.memori.composable
 
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -38,6 +37,14 @@ import com.example.memori.database.note_data.NoteViewModelFactory
 import com.example.memori.database.note_data.NotesEntity
 import com.example.memori.database.note_data.NotesRepository
 
+/**
+ * Composable that displays the favorites screen.
+ * Allows users to view, select, delete, or remove favorite notes.
+ * Handles multi-selection mode and updates note state via the ViewModel.
+ *
+ * @param navController The NavController used for navigation between screens.
+ * @param noteViewModel The ViewModel for notes, optional (default: created via factory).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
@@ -53,11 +60,15 @@ fun FavoritesScreen(
         )
     )
 ) {
+    // State of favorite notes observed from the ViewModel
     val noteState by noteViewModel.getFavoritesNote().collectAsState(initial = emptyList())
 
+    // Random kaomoji to show when there are no notes
     val randomKaomoji by remember { mutableStateOf(kaomoji.random()) }
 
+    // State for multi-selection mode
     var selectionMode by remember { mutableStateOf(false) }
+    // List of selected notes
     val selectedNotes = remember { mutableStateListOf<NotesEntity>() }
 
     Scaffold(
@@ -105,9 +116,11 @@ fun FavoritesScreen(
         Surface(
             color = MaterialTheme.colorScheme.background,
 
-        ) {
+            ) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
             ) {
                 if (noteState.isEmpty()) {
                     Text(

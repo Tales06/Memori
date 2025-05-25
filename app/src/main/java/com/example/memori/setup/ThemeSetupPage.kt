@@ -50,12 +50,27 @@ import com.example.memori.animation.AnimBackground
 import com.example.memori.theme.MyPalette
 import com.example.memori.theme.MyPaletteDark
 
+/**
+ * Represents the available theme options for the application.
+ *
+ * - [SYSTEM]: Follows the system-wide theme setting.
+ * - [LIGHT]: Forces the application to use a light theme.
+ * - [DARK]: Forces the application to use a dark theme.
+ */
 enum class ThemeType {
     SYSTEM,
     LIGHT,
     DARK
 }
 
+/**
+ * A composable wrapper for the theme setup page that manages the selected theme state
+ * and provides animated transitions between theme selections.
+ *
+ * @param initialTheme The initial theme to be selected when the page is first displayed. Defaults to [ThemeType.SYSTEM].
+ * @param onThemeSelected Callback invoked when the user selects a new theme.
+ * @param onContinue Callback invoked when the user confirms their theme selection and chooses to continue.
+ */
 @Composable
 fun ThemeSetupPageWrapper(
     initialTheme: ThemeType = ThemeType.SYSTEM,
@@ -83,6 +98,17 @@ fun ThemeSetupPageWrapper(
 }
 
 
+/**
+ * Composable function that displays the theme selection setup page.
+ *
+ * @param currentTheme The currently selected [ThemeType].
+ * @param onThemeChange Callback invoked when the user selects a different theme.
+ * @param onThemeConfirmed Callback invoked when the user confirms their theme selection.
+ *
+ * This page presents three theme options ("System", "Light", "Dark") for the user to choose from,
+ * highlights the currently selected theme, and provides a "Continue" button to confirm the selection.
+ * It also displays an animated background and uses Material Design components for styling.
+ */
 @Composable
 fun ThemeSetupPage(
     currentTheme: ThemeType,
@@ -150,6 +176,16 @@ fun ThemeSetupPage(
     }
 }
 
+/**
+ * A composable function that displays a selectable theme option box with a color preview and label.
+ *
+ * @param label The text label describing the theme option.
+ * @param color The color to display as the theme preview.
+ * @param selected Whether this option is currently selected.
+ * @param onClick Callback invoked when the box is clicked.
+ *
+ * The box animates its border color and scale when selected, and shows a check icon in the corner.
+ */
 @Composable
 fun ThemeOptionBox(label: String, color: Color, selected: Boolean, onClick: () -> Unit) {
 

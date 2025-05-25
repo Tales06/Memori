@@ -1,3 +1,14 @@
+/**
+ * A composable function that displays a loading indicator with padding.
+ *
+ * This function uses [ContainedLoadingIndicator] from Material3 with an 8.dp padding.
+ * It can be used to indicate loading states in your UI.
+ *
+ * @sample LoadingIndicator
+ *
+ * @see ContainedLoadingIndicator
+ * @see Modifier.padding
+ */
 package com.example.memori.composable
 
 import androidx.compose.foundation.layout.padding

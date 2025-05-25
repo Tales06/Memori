@@ -1,3 +1,28 @@
+/**
+ * Composable screen that displays the notes contained within a specific folder.
+ *
+ * This screen provides functionalities such as:
+ * - Viewing all notes in the selected folder.
+ * - Selecting multiple notes for batch actions (delete, move).
+ * - Creating new notes (unless the folder is "Protected").
+ * - Deleting all notes in the folder or the folder itself, with special handling for protected folders (PIN required).
+ * - Renaming the folder (except for the "Protected" folder).
+ * - Moving selected notes to another folder or removing them from folders.
+ * - Displaying dialogs for confirmation, PIN entry, and folder renaming.
+ *
+ * @param folderId The unique identifier of the folder whose notes are to be displayed.
+ * @param folderName The name of the folder.
+ * @param navController The navigation controller used for navigating between screens.
+ * @param viewModelNote The ViewModel responsible for note-related operations. Defaults to a ViewModel instance using the current context.
+ * @param viewModelFolder The ViewModel responsible for folder-related operations. Defaults to a ViewModel instance using the current context.
+ *
+ * UI Features:
+ * - Top app bar with context-sensitive actions (selection mode, delete, rename).
+ * - Floating action button for creating a new note (not shown for "Protected" folder).
+ * - Dialogs for deleting, moving, renaming, and PIN entry.
+ * - Empty state with a random kaomoji and message when no notes are present.
+ * - List of notes with support for selection and navigation to note details.
+ */
 package com.example.memori.composable
 
 import android.widget.Toast
@@ -134,6 +159,7 @@ fun FolderNotesScreen(
             destFolderId = folderId
         }
     }
+
 
 
 

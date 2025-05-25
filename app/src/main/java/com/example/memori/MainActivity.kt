@@ -1,5 +1,6 @@
 package com.example.memori
 
+import ButtonNote
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
@@ -28,7 +29,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.memori.composable.BottomBar
-import com.example.memori.composable.ButtonNote
 import com.example.memori.database.theme_data.ThemeViewModel
 import com.example.memori.database.theme_data.ThemeViewModelFactory
 import com.example.memori.preference.hasSeenSetup
@@ -39,6 +39,37 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
+/**
+ * MainActivity is the entry point of the Memori application.
+ *
+ * This activity sets up the Compose UI, initializes navigation, manages theme selection,
+ * and determines whether to show the welcome/setup screen based on user preferences.
+ *
+ * Key Features:
+ * - Uses Jetpack Compose for UI rendering.
+ * - Observes the selected theme from [ThemeViewModel] and applies it dynamically.
+ * - Checks if the user has completed the setup process and conditionally displays the welcome screen.
+ * - Sets up the main navigation controller and coroutine scope for use throughout the app.
+ *
+ * Experimental APIs:
+ * - Utilizes [ExperimentalMaterial3Api] and [ExperimentalMaterial3ExpressiveApi] for Material 3 components.
+ *
+ * @see ThemeViewModel
+ * @see MyMemoriTheme
+ * @see MainScreen
+ */
+/**
+ * Il punto di ingresso principale dell'applicazione Memori.
+ *
+ * Questa activity è responsabile dell'inizializzazione dell'interfaccia utente dell'app
+ * e della gestione dei principali eventi del ciclo di vita.
+ * Estende [ComponentActivity], che fornisce il supporto di compatibilità per i componenti Android moderni.
+ */
+/**
+ * The main entry point of the Memori application.
+ *
+ * This activity is responsible for initializing the app's UI and handling the main lifecycle events.
+ */
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,6 +91,11 @@ class MainActivity : ComponentActivity() {
             val selectedTheme by themeViewModel.selectedTheme.collectAsStateWithLifecycle()
 
 
+            /**
+             * Launches a coroutine when the composable enters the composition.
+             * - Sets [showWelcome] to true if the user has not completed the setup, based on [context.hasSeenSetup()].
+             * - Sets [isLoaded] to true to indicate that the loading process is complete.
+             */
             LaunchedEffect(Unit) {
                 showWelcome = !context.hasSeenSetup()
                 isLoaded = true
@@ -87,6 +123,20 @@ class MainActivity : ComponentActivity() {
 
 }
 
+/**
+ * MainScreen is the primary composable function for the application's main UI.
+ *
+ * This function sets up the main scaffold, including the bottom navigation bar and floating action button,
+ * and manages navigation between different screens using the provided [NavHostController].
+ *
+ * @param navController The navigation controller used to manage app navigation.
+ * @param context The context used for accessing application resources.
+ * @param scope The coroutine scope for launching asynchronous operations.
+ * @param showWelcome Boolean flag indicating whether to show the welcome screen.
+ *
+ * The function also manages the state for search expansion and theme selection,
+ * and conditionally displays UI elements based on the current navigation destination.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @ExperimentalMaterial3Api
 @Composable

@@ -1,3 +1,27 @@
+/**
+ * Composable screen for viewing and editing a modified note.
+ *
+ * This screen allows users to:
+ * - View and edit the title and content of a note.
+ * - Mark the note as favorite.
+ * - Change the note's wallpaper/background.
+ * - Archive or unarchive the note.
+ * - Move the note to a folder or remove it from a folder.
+ * - Delete the note.
+ *
+ * The screen supports navigation back to the home screen or to a specific folder's notes.
+ * It uses dialogs for confirmation actions (delete, archive, move to folder) and a bottom sheet for wallpaper selection.
+ *
+ * @param id The unique identifier of the note to be displayed and edited.
+ * @param navController The navigation controller used for navigating between screens.
+ * @param viewModel The [NoteViewModel] instance for managing note data. Defaults to a new instance with the appropriate factory.
+ * @param folderViewModel The [FolderViewModel] instance for managing folder data. Defaults to a new instance with the appropriate factory.
+ * @param folderId (Optional) The ID of the folder the note belongs to, if any.
+ * @param folderName (Optional) The name of the folder the note belongs to, if any.
+ *
+ * @see NoteViewModel
+ * @see FolderViewModel
+ */
 package com.example.memori.composable
 
 import android.net.Uri
@@ -146,6 +170,9 @@ fun ScreenModifiedNotes(
 
     val context = LocalContext.current
 
+
+    // For focus management
+    // This is used to request focus on the content field when the screen is loaded
     val contentFocusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -168,7 +195,7 @@ fun ScreenModifiedNotes(
         }
     }
 
-
+    // For image loading
     Box(
         modifier = Modifier.fillMaxSize()
     ) {

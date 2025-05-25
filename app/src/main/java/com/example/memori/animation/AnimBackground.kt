@@ -21,36 +21,53 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 
+/**
+ * Composable that creates an animated background with floating bubbles.
+ * Each bubble is animated with a scaling effect using infinite transitions.
+ *
+ * The animations are managed using Jetpack Compose coroutines and
+ * rememberInfiniteTransition, which allows values to be animated in a loop.
+ *
+ * @see androidx.compose.runtime.Composable
+ * @see androidx.compose.animation.core.rememberInfiniteTransition
+ */
 @Composable
 fun AnimBackground() {
+    // Infinite transition to animate the scale of the bubbles
     val infiniteTransition = rememberInfiniteTransition()
 
+    // Scale animation for the first bubble
     val scale1 by infiniteTransition.animateFloat(
         1f,
         1.2f,
         infiniteRepeatable(tween(5000, easing = LinearEasing), RepeatMode.Reverse)
     )
+    // Scale animation for the second bubble
     val scale2 by infiniteTransition.animateFloat(
         1f,
         1.4f,
         infiniteRepeatable(tween(6000, easing = LinearEasing), RepeatMode.Reverse)
     )
+    // Scale animation for the third bubble
     val scale3 by infiniteTransition.animateFloat(
         1f,
         1.6f,
         infiniteRepeatable(tween(7000, easing = LinearEasing), RepeatMode.Reverse)
     )
+    // Scale animation for the fourth bubble
     val scale4 by infiniteTransition.animateFloat(
         1f,
         1.8f,
         infiniteRepeatable(tween(5500, easing = LinearEasing), RepeatMode.Reverse)
     )
+    // Scale animation for the fifth bubble
     val scale5 by infiniteTransition.animateFloat(
         1f,
         2.0f,
         infiniteRepeatable(tween(8000, easing = LinearEasing), RepeatMode.Reverse)
     )
 
+    // Main container with a vertical gradient background
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -60,7 +77,7 @@ fun AnimBackground() {
                 )
             )
     ) {
-        // Bolla in alto a sinistra
+        // Top-left bubble
         Box(
             modifier = Modifier
                 .scale(scale1)
@@ -72,7 +89,7 @@ fun AnimBackground() {
                 )
         )
 
-        // Bolla in basso a destra
+        // Bottom-right bubble
         Box(
             modifier = Modifier
                 .scale(scale2)
@@ -85,7 +102,7 @@ fun AnimBackground() {
                 )
         )
 
-        // Bolla centrale in alto
+        // Top-center bubble
         Box(
             modifier = Modifier
                 .scale(scale3)
@@ -98,7 +115,7 @@ fun AnimBackground() {
                 )
         )
 
-        // Bolla centrale in basso
+        // Bottom-center bubble
         Box(
             modifier = Modifier
                 .scale(scale4)
@@ -111,7 +128,7 @@ fun AnimBackground() {
                 )
         )
 
-        // Bolla centrale grande al centro
+        // Large central bubble
         Box(
             modifier = Modifier
                 .scale(scale5)

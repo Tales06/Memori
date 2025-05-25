@@ -1,3 +1,11 @@
+/**
+ * ViewModel for managing notes in the application.
+ *
+ * This ViewModel acts as a bridge between the UI and the data layer, handling operations related to notes,
+ * including CRUD operations, archiving, folder management, and synchronization with Firestore.
+ *
+ * @property repository The local notes repository for database operations.
+ */
 package com.example.memori.database.note_data
 
 import androidx.lifecycle.ViewModel
@@ -17,11 +25,42 @@ import kotlinx.coroutines.withContext
 
 class NoteViewModel(private val repository: NotesRepository): ViewModel() {
 
+    /**
+     * Repository instance for handling Firestore operations related to notes.
+     */
+
+    /**
+     * A [StateFlow] that emits the list of all notes from the repository.
+     *
+     * This flow is eagerly started in the [viewModelScope] and initialized with an empty list.
+     */
     private val repoFireStore = FirestoreNoteRepository()
 
     val allNotes: StateFlow<List<NotesEntity>> = repository.allNotes
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    /**
+     * ViewModel for managing notes, providing methods for CRUD operations, folder management,
+     * archiving, searching, and synchronization with a remote Firestore repository.
+     *
+     * Functions:
+     * - insert(note, onInserted): Inserts a note into the local database and Firestore, invoking a callback with the new note's ID.
+     * - delete(noteId): Deletes a note from the local database and Firestore.
+     * - update(note): Updates a note in the local database and Firestore.
+     * - getNoteById(id): Retrieves a note by its ID as a StateFlow.
+     * - getFavoritesNote(): Returns a Flow of favorite notes.
+     * - searchNotes(searchQuery): Searches notes by a query string, returning a Flow of results.
+     * - getArchivedNotes(): Returns a Flow of archived notes.
+     * - archiveNote(noteId): Archives a note locally and updates it in Firestore.
+     * - unArchiveNote(noteId): Unarchives a note locally and updates it in Firestore.
+     * - moveNoteToFolder(noteId, folderId): Moves a note to a folder locally and updates it in Firestore.
+     * - getNotesInFolder(folderId): Returns a Flow of notes in a specific folder.
+     * - clearNoteFolder(noteId): Removes a note from its folder locally and updates it in Firestore.
+     * - syncAllNotes(userId): Synchronizes all local notes with Firestore, uploading local notes and merging remote changes.
+     *
+     * All operations that modify data are performed within the ViewModel's coroutine scope.
+     * Firestore operations are performed only if a user is authenticated.
+     */
     fun insert(note: NotesEntity, onInserted: (Int) -> Unit) = viewModelScope.launch {
         val dbId = repository.insert(note)
 

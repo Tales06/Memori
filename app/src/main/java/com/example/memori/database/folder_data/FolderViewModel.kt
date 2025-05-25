@@ -24,6 +24,20 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel() {
     private val repoFireStore = FirestoreFolderRepository()
 
 
+    /**
+     * ViewModel for managing folder-related operations in the application.
+     *
+     * @property allFolders A [StateFlow] that emits the list of all [FolderEntity] objects from the repository.
+     *
+     * Functions:
+     * - [createFolder]: Creates a new folder with the given name and protection status, saves it locally and uploads to Firestore if the user is authenticated.
+     * - [renameFolder]: Renames an existing folder by its UUID, updates the last modified timestamp, and syncs the change to Firestore.
+     * - [getFolderByUuid]: Retrieves a folder as a [Flow] by its UUID.
+     * - [deleteFolder]: Deletes a folder by its ID and UUID, and removes it from Firestore if the user is authenticated.
+     * - [syncAllFolders]: Synchronizes all local folders with the cloud, uploading local folders and downloading new or updated folders from Firestore.
+     *
+     * This ViewModel ensures that folder data is kept in sync between the local database and Firestore for authenticated users.
+     */
     val allFolders: StateFlow<List<FolderEntity>> = repository.allFolders
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 

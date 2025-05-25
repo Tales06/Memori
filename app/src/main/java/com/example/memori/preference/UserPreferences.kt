@@ -1,3 +1,18 @@
+/**
+ * Object for managing user preferences using Android DataStore.
+ *
+ * Provides methods to persist and retrieve the "sync is enabled" preference.
+ *
+ * @property IS_SYNC_ENABLED Key for the sync enabled preference.
+ *
+ * @function setSyncEnabled Saves the sync enabled state to DataStore.
+ * @param context The context used to access DataStore.
+ * @param isEnabled The value to set for sync enabled.
+ *
+ * @function isSyncEnabled Returns a Flow emitting the current sync enabled state.
+ * @param context The context used to access DataStore.
+ * @return Flow<Boolean> emitting the sync enabled state, defaulting to false if unset.
+ */
 package com.example.memori.preference
 
 import android.content.Context

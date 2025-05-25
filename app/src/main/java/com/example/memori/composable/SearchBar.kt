@@ -1,3 +1,28 @@
+/**
+ * Composable function that displays a customizable search bar with note filtering and selection capabilities.
+ *
+ * This component allows users to search through notes, select multiple notes for batch deletion,
+ * and navigate to a note modification screen. It also handles UI states such as showing a random kaomoji
+ * and a "No notes found" message when the search yields no results.
+ *
+ * @param navController The NavController used for navigation between screens.
+ * @param noteViewModel The ViewModel for managing note data. Defaults to a ViewModel created with a factory.
+ * @param modifier Modifier to be applied to the SearchBarComponent.
+ * @param expanded Boolean indicating whether the search bar is expanded.
+ * @param onExpandedChange Callback invoked when the expanded state changes.
+ * @param onNoteClick Callback invoked when a note is clicked.
+ * @param onNoteLongPress Callback invoked when a note is long-pressed.
+ * @param drawerState The state of the navigation drawer.
+ * @param scope CoroutineScope for launching suspend functions (e.g., opening the drawer).
+ *
+ * Features:
+ * - Animated leading icon (menu/close) with rotation.
+ * - Search input with real-time filtering of notes.
+ * - Lazy vertical grid displaying filtered notes with support for selection and long-press actions.
+ * - Batch deletion of selected notes with a confirmation toast.
+ * - Displays a random kaomoji and message when no notes are found.
+ * - Handles navigation to note modification screen on note click.
+ */
 package com.example.memori.composable
 
 import android.widget.Toast
@@ -105,10 +130,10 @@ fun SearchBarComponent(
 
     val randomKaomoji by remember { mutableStateOf(kaomoji.random()) }
 
-    // Lista delle note selezionate in search
+    // State for selected notes
     val selectedNotesInSearch = remember { mutableStateListOf<NotesEntity>() }
 
-    // Rotazione dell’icona
+    // Animate the rotation of the leading icon based on the expanded state
     val rotationAngle by animateFloatAsState(
         targetValue = if (expanded) 90f else 0f,
         animationSpec = tween(durationMillis = 300), label = ""
@@ -124,8 +149,8 @@ fun SearchBarComponent(
         inputField = {
             SearchBarDefaults.InputField(
                 query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSearch = { onExpandedChange(false) },
+                onQueryChange = { searchQuery = it }, // Update search query
+                onSearch = { onExpandedChange(false) }, // Close search bar on search
                 expanded = expanded,
                 onExpandedChange = onExpandedChange,
                 placeholder = { Text("Search") },
@@ -136,6 +161,7 @@ fun SearchBarComponent(
                         modifier = Modifier
                             .padding(8.dp)
                             .clickable {
+                                // Toggle the search bar state
                                 if (expanded) {
                                     onExpandedChange(false)
                                     searchQuery = ""
@@ -150,6 +176,7 @@ fun SearchBarComponent(
                     )
                 },
                 trailingIcon = {
+                    // Show the delete icon only if there are selected notes
                     if (selectedNotesInSearch.isNotEmpty()) {
                         IconButton(
                             onClick = {

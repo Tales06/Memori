@@ -1,3 +1,13 @@
+/**
+ * Represents an item in the bottom navigation bar.
+ *
+ * @property title The display title of the navigation item.
+ * @property route The navigation route associated with this item.
+ * @property selectedIcon The icon to display when the item is selected.
+ * @property unselectedIcon The icon to display when the item is not selected.
+ * @property hasNews Indicates if the item has new content or notifications.
+ * @property badgeCount Optional badge count to display on the item.
+ */
 package com.example.memori.data
 
 import androidx.compose.material.icons.Icons

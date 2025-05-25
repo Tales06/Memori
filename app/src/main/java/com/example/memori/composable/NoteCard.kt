@@ -1,3 +1,16 @@
+/**
+ * Displays a grid of note cards using Jetpack Compose.
+ *
+ * @param notes The list of [NotesEntity] objects to display.
+ * @param navController The [NavController] used for navigation actions.
+ * @param onNoteClick Callback invoked when a note is tapped.
+ * @param onNoteLongPress Callback invoked when a note is long-pressed.
+ * @param selectedNotes Optional list of selected [NotesEntity] objects for selection state.
+ *
+ * Each note card displays the note's title, a truncated version of its content, and an optional image.
+ * Selected notes are visually highlighted with a border and a different background color.
+ * Cards animate their opacity based on their position in the grid for a fade-in effect.
+ */
 package com.example.memori.composable
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -62,7 +75,7 @@ fun NoteCard(
                 val index = notes.indexOf(note)
                 val firstVisibleItemIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
 
-                // Calcola il fattore di opacità in base alla posizione della nota
+                // Animate the alpha based on the position of the item in the grid
                 val alpha by animateFloatAsState(
                     targetValue = if (index < firstVisibleItemIndex) 1.5f
                     else 1.3f - (index - firstVisibleItemIndex) * 0.095f,
@@ -104,6 +117,7 @@ fun NoteCard(
                     ) {
                     Box {
 
+                        //Show the image if it exists
                         if (resIdImg != 0) {
                             Image(
                                 painter = painterResource(id = resIdImg),
@@ -128,7 +142,7 @@ fun NoteCard(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = note.content.take(50) + "...", // Limita il testo per migliorare la UI
+                                text = note.content.take(50) + "...", // Limit content for better UI
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                             )

@@ -1,3 +1,20 @@
+/**
+ * Composable function that displays the setup (welcome) page of the application.
+ *
+ * This page features an animated background, a Lottie animation, and a "Start" button
+ * to continue to the next step in the setup process.
+ *
+ * @param onContinue Lambda function to be invoked when the "Start" button is clicked.
+ *
+ * Features:
+ * - Animated visibility for smooth content appearance.
+ * - Custom font styling using the Poppins font family.
+ * - Lottie animation loaded from the assets folder ("data.json").
+ * - Customizable button with icon and rounded corners.
+ * - Uses [AnimBackground] for a dynamic background effect.
+ *
+ * @see AnimBackground
+ */
 package com.example.memori.setup
 
 import android.util.Log
@@ -82,6 +99,7 @@ fun SetupPage(
     )
 
 
+    //Logo animation with lottie
     LaunchedEffect(composition) {
         if (composition == null) {
             Log.e("Lottie", "Composition is null")

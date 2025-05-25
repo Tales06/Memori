@@ -8,6 +8,26 @@ import kotlinx.coroutines.tasks.await
 class FirestoreNoteRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
 ) {
+    /**
+     * Repository class for handling synchronization of notes with Firestore.
+     *
+     * Provides methods to upload, retrieve, insert, and delete notes in the Firestore database
+     * under the "users/{userId}/notes" collection path.
+     *
+     * @param userId The unique identifier of the user whose notes are being managed.
+     * @param notes A list of [NotesEntity] objects representing the notes to be uploaded.
+     * @param note A single [NotesEntity] object representing the note to be inserted or uploaded.
+     * @param noteId The unique identifier of the note to be deleted.
+     *
+     * Functions:
+     * - uploadNote: Uploads a list of notes to Firestore for the specified user.
+     * - getAllNotesFromCloud: Retrieves all notes for the specified user from Firestore.
+     * - deleteNote: Deletes a specific note for the user from Firestore.
+     * - insertOneNote: Inserts a single note for the user into Firestore.
+     * - uploadOneNote: Uploads (or updates) a single note for the user in Firestore.
+     *
+     * All functions are suspend functions and should be called from a coroutine or another suspend function.
+     */
     suspend fun uploadNote(userId: String, notes: List<NotesEntity>) {
         val notesRef = db.collection("users")
             .document(userId)

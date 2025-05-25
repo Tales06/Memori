@@ -17,7 +17,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.memori.R
 import com.example.memori.animation.AnimBackground
 
-
+/**
+ * Composable function that displays the Sign-In screen.
+ * This screen allows the user to log in using Google, go back to the previous screen, or skip the login process.
+ *
+ * @param signInViewModel The ViewModel responsible for managing the sign-in state.
+ * @param onLoggedIn Callback invoked when the user successfully logs in.
+ * @param onBack Callback invoked when the user chooses to go back to the previous screen.
+ * @param onSkip Callback invoked when the user decides to skip the login process.
+ */
 @Composable
 fun SignInScreen(
     signInViewModel: SignInViewModel,
@@ -25,19 +33,25 @@ fun SignInScreen(
     onBack: () -> Unit,
     onSkip: () -> Unit,
 ) {
+    // Retrieve the current context
     val context = LocalContext.current
 
+    // Collect the state from the ViewModel
     val state by signInViewModel.state.collectAsStateWithLifecycle()
 
+    // Show a toast message if there is an error
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
         }
     }
 
+    // Main container for the screen
     Box(modifier = Modifier.fillMaxSize()) {
+        // Animated background
         AnimBackground()
 
+        // Centered content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -46,6 +60,7 @@ fun SignInScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            // Card containing the login options
             Card(
                 modifier = Modifier.fillMaxWidth(0.9f),
                 shape = RoundedCornerShape(24.dp),
@@ -62,6 +77,7 @@ fun SignInScreen(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Title text
                     Text(
                         text = "Login to sync your notes",
                         style = MaterialTheme.typography.headlineSmall,
@@ -70,6 +86,7 @@ fun SignInScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Google login button
                     Button(
                         onClick = onLoggedIn,
                         shape = RoundedCornerShape(50),
@@ -84,6 +101,7 @@ fun SignInScreen(
                         Text("Login with Google")
                     }
 
+                    // Back button
                     OutlinedButton(
                         onClick = onBack,
                         shape = RoundedCornerShape(50),
@@ -100,6 +118,7 @@ fun SignInScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // Skip login button
                     Button(
                         onClick = onSkip,
                         shape = RoundedCornerShape(50),

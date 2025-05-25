@@ -1,3 +1,30 @@
+/**
+ * An object that manages storing, retrieving, and deleting a PIN hash using Android's DataStore.
+ *
+ * This object provides extension functions for [Context] to interact with the PIN hash value,
+ * which is stored securely in a preferences DataStore named "pin_preferences".
+ *
+ * Functions:
+ * - [Context.savePinHash]: Saves the provided PIN hash string to the DataStore.
+ * - [Context.pinHashFlow]: Returns a [Flow] that emits the current PIN hash value, or null if not set.
+ * - [Context.deletePinHash]: Removes the stored PIN hash from the DataStore.
+ * - [Context.getPinHash]: Retrieves the current PIN hash value as a suspend function.
+ *
+ * Usage:
+ * ```
+ * // To save a PIN hash
+ * context.savePinHash(pinHash)
+ *
+ * // To observe PIN hash changes
+ * context.pinHashFlow().collect { pinHash -> ... }
+ *
+ * // To delete the PIN hash
+ * context.deletePinHash()
+ *
+ * // To get the PIN hash synchronously in a coroutine
+ * val pinHash = context.getPinHash()
+ * ```
+ */
 package com.example.memori.preference
 
 import android.content.Context

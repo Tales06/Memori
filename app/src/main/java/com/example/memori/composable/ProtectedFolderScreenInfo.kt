@@ -1,3 +1,12 @@
+/**
+ * Displays an informational screen about protected folders, explaining their purpose and usage.
+ *
+ * This composable presents a lock icon, a title, a detailed description about protected folders,
+ * and two action buttons: "Cancel" and "Set Up Now".
+ *
+ * @param onCancel Callback invoked when the user taps the "Cancel" button.
+ * @param onProceed Callback invoked when the user taps the "Set Up Now" button to proceed with setup.
+ */
 package com.example.memori.composable
 
 import androidx.compose.foundation.layout.*

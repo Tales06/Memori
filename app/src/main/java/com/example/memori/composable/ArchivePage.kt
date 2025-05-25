@@ -2,50 +2,13 @@ package com.example.memori.composable
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Unarchive
-import androidx.compose.material.icons.outlined.Archive
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -72,6 +35,15 @@ import com.example.memori.preference.PinPreferences.pinHashFlow
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
 
+/**
+ * Composable function that displays the Archive Page.
+ * This screen shows archived notes, allows navigation to other sections, and provides options
+ * to manage folders, unarchive notes, or unlock protected folders.
+ *
+ * @param navController The NavController used for navigation between screens.
+ * @param viewModel The ViewModel for managing notes, with a default factory for dependency injection.
+ * @param folderViewModel The ViewModel for managing folders, with a default factory for dependency injection.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchivePage(
@@ -91,35 +63,44 @@ fun ArchivePage(
         )
     ),
 ) {
+    // Context for accessing resources and preferences
     val context = LocalContext.current
 
+    // State for archived notes
     val archivedNotes = viewModel.getArchivedNotes().collectAsStateWithLifecycle(initialValue = emptyList())
     val archivedNotesState = archivedNotes.value
 
+    // State for folder creation dialog
     var folderName by remember { mutableStateOf("") }
     val foldersState by folderViewModel.allFolders.collectAsStateWithLifecycle()
     var showFolderDialog by remember { mutableStateOf(false) }
 
+    // State for unarchive confirmation dialog
     var showUnarchiveDialog by remember { mutableStateOf(false) }
 
-
+    // Navigation state
     val backStackEntry by navController.currentBackStackEntryAsState()
     var currentRoute = backStackEntry?.destination?.route
 
+    // Drawer state for navigation drawer
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    // Random kaomoji for empty archive message
     var randomKaomoji by remember { mutableStateOf(kaomoji.random()) }
 
+    // Selection mode for managing multiple notes
     var selectionMode by remember { mutableStateOf(false) }
     val selectedNotes = remember { mutableStateListOf<NotesEntity>() }
 
+    // State for PIN dialog
     var showPinDialog by remember { mutableStateOf(false) }
     var pinInput by remember { mutableStateOf("") }
     val pinHash by context.pinHashFlow().collectAsState(initial = null)
     var pinVisible by remember { mutableStateOf(false) }
     val pinValid = pinInput.length in 4..6
 
+    // Modal navigation drawer for app navigation
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -127,6 +108,7 @@ fun ArchivePage(
                 Column(
                     modifier = Modifier.padding(horizontal = 24.dp)
                 ) {
+                    // Drawer header
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Memori",
@@ -136,18 +118,14 @@ fun ArchivePage(
                     )
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // Navigation items
                     NavigationDrawerItem(
-                        label = {
-                            Text(
-                                text = "Home",
-                            )
-                        },
+                        label = { Text(text = "Home") },
                         selected = currentRoute == "home",
                         onClick = {
                             navController.navigate("home")
-                            scope.launch {
-                                drawerState.close()
-                            }
+                            scope.launch { drawerState.close() }
                         },
                         icon = {
                             Icon(
@@ -159,17 +137,11 @@ fun ArchivePage(
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
                     NavigationDrawerItem(
-                        label = {
-                            Text(
-                                text = "Archive",
-                            )
-                        },
+                        label = { Text(text = "Archive") },
                         selected = currentRoute == "archive",
                         onClick = {
                             navController.navigate("archive")
-                            scope.launch {
-                                drawerState.close()
-                            }
+                            scope.launch { drawerState.close() }
                         },
                         icon = {
                             Icon(
@@ -181,18 +153,14 @@ fun ArchivePage(
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
 
+                    // Protected folder navigation
                     NavigationDrawerItem(
-                        label = {
-                            Text(
-                                text = "Protected folder",
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
+                        label = { Text(text = "Protected folder", color = MaterialTheme.colorScheme.onBackground) },
                         selected = false,
                         onClick = {
                             scope.launch {
                                 drawerState.close()
-                                if (pinHash == null || pinHash == "") {
+                                if (pinHash.isNullOrEmpty()) {
                                     navController.navigate("protected_info")
                                 } else {
                                     showPinDialog = true
@@ -207,20 +175,13 @@ fun ArchivePage(
                             )
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-
                     )
+
+                    // Folder creation
                     NavigationDrawerItem(
-                        label = {
-                            Text(
-                                text = "Create a new folder",
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        },
+                        label = { Text(text = "Create a new folder", color = MaterialTheme.colorScheme.onBackground) },
                         selected = false,
-                        onClick = {
-                            // Handle folder creation
-                            showFolderDialog = true
-                        },
+                        onClick = { showFolderDialog = true },
                         icon = {
                             Icon(
                                 imageVector = Icons.Outlined.Folder,
@@ -230,7 +191,9 @@ fun ArchivePage(
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
-                    if(foldersState.isNotEmpty()){
+
+                    // Display existing folders
+                    if (foldersState.isNotEmpty()) {
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -243,23 +206,13 @@ fun ArchivePage(
                             if (folder.folderName == "Protected") return@forEach
                             Spacer(modifier = Modifier.height(8.dp))
                             NavigationDrawerItem(
-                                label = {
-                                    Text(
-                                        text = folder.folderName,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                },
+                                label = { Text(text = folder.folderName, color = MaterialTheme.colorScheme.onBackground) },
                                 selected = false,
                                 onClick = {
-                                    // Handle folder selection
                                     navController.navigate("folderNotes/${folder.id}/${folder.folderName}") {
-                                        popUpTo("home") {
-                                            inclusive = true
-                                        }
+                                        popUpTo("home") { inclusive = true }
                                     }
-                                    scope.launch {
-                                        drawerState.close()
-                                    }
+                                    scope.launch { drawerState.close() }
                                 },
                                 icon = {
                                     Icon(
@@ -276,13 +229,13 @@ fun ArchivePage(
             }
         }
     ) {
-        if(showFolderDialog) {
+        // Folder creation dialog
+        if (showFolderDialog) {
             AlertDialog(
                 onDismissRequest = { showFolderDialog = false },
                 confirmButton = {
                     TextButton(onClick = {
                         if (folderName.isNotBlank()) {
-                            // Salva nel database
                             folderViewModel.createFolder(folderName.trim(), context)
                         }
                         folderName = ""
@@ -309,6 +262,8 @@ fun ArchivePage(
                 }
             )
         }
+
+        // PIN dialog for unlocking protected folder
         if (showPinDialog) {
             AlertDialog(
                 onDismissRequest = { showPinDialog = false },
@@ -329,18 +284,14 @@ fun ArchivePage(
                             }
                         },
                         isError = pinInput.isNotEmpty() && !pinValid,
-
-                        )
-
+                    )
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        // Calcola hash di pinInput
                         val digest = MessageDigest.getInstance("SHA-256")
                         val hashBytes = digest.digest(pinInput.toByteArray(Charsets.UTF_8))
                         val attemptHash = hashBytes.joinToString("") { "%02x".format(it) }
                         if (attemptHash == pinHash) {
-                            // Trova cartella e naviga
                             val prot = foldersState.find { it.folderName == "Protected" }
                             prot?.let {
                                 navController.navigate("folderNotes/${it.id}/${it.folderName}") {
@@ -350,11 +301,7 @@ fun ArchivePage(
                             showPinDialog = false
                             pinInput = ""
                         } else {
-                            Toast.makeText(
-                                context,
-                                "Incorrect PIN",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(context, "Incorrect PIN", Toast.LENGTH_SHORT).show()
                         }
                     }) {
                         Text("OK")
@@ -365,10 +312,11 @@ fun ArchivePage(
                         Text("Cancel")
                     }
                 },
-
             )
         }
-        if(showUnarchiveDialog) {
+
+        // Unarchive confirmation dialog
+        if (showUnarchiveDialog) {
             AlertDialog(
                 onDismissRequest = {
                     showUnarchiveDialog = false
@@ -386,26 +334,18 @@ fun ArchivePage(
                         Text("Confirm")
                     }
                 },
-                icon = {
-                    Icon(Icons.Default.Unarchive, null)
-                },
+                icon = { Icon(Icons.Default.Unarchive, null) },
                 dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showUnarchiveDialog = false
-                        }
-                    ) {
+                    TextButton(onClick = { showUnarchiveDialog = false }) {
                         Text("Cancel")
                     }
                 },
-                title = {
-                    Text("Unarchive notes")
-                },
-                text = {
-                    Text("Do you want to unarchive this notes")
-                }
+                title = { Text("Unarchive notes") },
+                text = { Text("Do you want to unarchive this notes") }
             )
         }
+
+        // Main scaffold for the Archive Page
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -431,7 +371,7 @@ fun ArchivePage(
                         }
                     },
                     actions = {
-                        if(selectionMode) {
+                        if (selectionMode) {
                             IconButton(
                                 onClick = {
                                     selectedNotes.forEach { note ->
@@ -442,9 +382,7 @@ fun ArchivePage(
                                 Icon(Icons.Default.Delete, contentDescription = "Delete")
                             }
                             IconButton(
-                                onClick = {
-                                    showUnarchiveDialog = true
-                                }
+                                onClick = { showUnarchiveDialog = true }
                             ) {
                                 Icon(Icons.Default.Unarchive, contentDescription = "Unarchive")
                             }
@@ -452,10 +390,15 @@ fun ArchivePage(
                     }
                 )
             }
-        ) {
-            innerPadding ->
-            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(innerPadding)) {
-                if(archivedNotes.value.isEmpty()){
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(innerPadding)
+            ) {
+                // Display message if no archived notes are available
+                if (archivedNotes.value.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -465,11 +408,8 @@ fun ArchivePage(
                             color = MaterialTheme.colorScheme.onBackground,
                             style = TextStyle(fontSize = 45.sp, fontWeight = FontWeight.Bold),
                             modifier = Modifier.align(Alignment.Center)
-
                         )
-
                         Spacer(modifier = Modifier.height(10.dp))
-
                         Text(
                             text = "No notes in the archive yet",
                             fontSize = 18.sp,
@@ -481,6 +421,7 @@ fun ArchivePage(
                         )
                     }
                 } else {
+                    // Display archived notes
                     NoteCard(
                         notes = archivedNotesState,
                         navController = navController,

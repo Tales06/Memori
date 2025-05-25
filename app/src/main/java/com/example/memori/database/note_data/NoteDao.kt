@@ -1,3 +1,16 @@
+/**
+ * Data Access Object (DAO) for the NotesEntity.
+ * Provides methods for interacting with the notes table in the database.
+ *
+ * Functions include:
+ * - Inserting, updating, and deleting notes.
+ * - Querying notes by various criteria (all notes, by ID, favorites, archived, by folder, search).
+ * - Archiving and unarchiving notes.
+ * - Moving notes to folders and clearing folder assignments.
+ *
+ * All database operations that modify data are suspend functions to support coroutine usage.
+ * Query functions return Flow to provide observable data streams.
+ */
 package com.example.memori.database.note_data
 
 import androidx.room.*

@@ -1,3 +1,15 @@
+/**
+ * Utility functions and keys for managing user preferences related to the setup flow using DataStore.
+ *
+ * This file defines:
+ * - A DataStore instance for storing preferences.
+ * - A key for tracking whether the user has seen the setup screen.
+ * - Extension functions to get and set the setup completion state.
+ *
+ * Usage:
+ * - Call [Context.hasSeenSetup] to check if the setup has been completed.
+ * - Call [Context.setHasSeenSetup] to update the setup completion state.
+ */
 package com.example.memori.preference
 
 import android.content.Context

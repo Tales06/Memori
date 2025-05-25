@@ -71,6 +71,30 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 
+/**
+ * Composable function that displays the main screen for creating, editing, and managing notes.
+ *
+ * This screen allows users to:
+ * - Edit the note's title and content.
+ * - Mark the note as favorite.
+ * - Assign or move the note to a folder.
+ * - Change the note's wallpaper/background.
+ * - Archive or delete the note, with confirmation dialogs.
+ *
+ * The UI includes:
+ * - A top app bar with navigation, favorite, archive, and folder actions.
+ * - A bottom app bar with wallpaper selection and delete actions.
+ * - Outlined text fields for the note's title and content.
+ * - Modal dialogs for confirming deletion, archiving, and folder selection.
+ * - A modal bottom sheet for selecting a wallpaper.
+ * - Background image support for notes.
+ *
+ * @param navController The navigation controller for handling navigation actions.
+ * @param viewModelNote The ViewModel for managing note data. Defaults to a new instance with repository.
+ * @param folderViewModel The ViewModel for managing folder data. Defaults to a new instance with repository.
+ * @param folderId The ID of the folder to which the note belongs, if any.
+ * @param folderName The name of the folder to which the note belongs, if any.
+ */
 @ExperimentalMaterial3Api
 @Composable
 fun ScreenNotes(
@@ -134,7 +158,7 @@ fun ScreenNotes(
 
 
 
-
+    //Load the wallpaper if it exists
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -188,6 +212,7 @@ fun ScreenNotes(
                     Text(text = "")
                 },
                 actions = {
+                    // IconButton for favorite, archive, and folder actions
                     IconButton(onClick = {
 
                         favorite = !favorite
@@ -391,6 +416,8 @@ fun ScreenNotes(
 
         }
 
+        // Show the dialog for deleting, archiving, or moving to folder
+
         if (showDialog) {
             GenericAlertDialog(
                 onDismissRequest = { showDialog = false },
@@ -541,7 +568,7 @@ fun ScreenNotes(
     }
 
 
-
+    // Show the bottom sheet for selecting a wallpaper
     if (showBottomSheetForWallpaper) {
         ModalBottomSheet(
             modifier = Modifier
@@ -660,6 +687,23 @@ fun ScreenNotes(
 }
 
 
+/**
+ * Saves a note by either inserting a new note or updating/deleting an existing one.
+ *
+ * This function checks if the note fields (title, content, wallpaper) are empty.
+ * - If all are empty and a valid note ID is provided, the note is deleted.
+ * - If not empty, the note is either updated (if noteID is not null and not zero)
+ *   or inserted as a new note (if noteID is null or zero).
+ *
+ * @param viewModelNote The ViewModel responsible for note operations.
+ * @param noteID The ID of the note to update or delete, or null to insert a new note.
+ * @param title The title of the note.
+ * @param content The content/body of the note.
+ * @param favorite Whether the note is marked as favorite.
+ * @param wallpaper Optional wallpaper/image associated with the note.
+ * @param folderId Optional folder ID to which the note belongs.
+ * @param onNoteSaved Callback invoked with the note ID after saving or null if deleted.
+ */
 fun saveNotes(
     viewModelNote: NoteViewModel,
     noteID: Int?,
