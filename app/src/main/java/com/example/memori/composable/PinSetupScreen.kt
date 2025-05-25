@@ -158,7 +158,7 @@ fun PinSetupScreen(
                             // Salva in DataStore e crea cartella
 
                             context.savePinHash(pinHash)
-                            folderViewModel.createFolder("Protected", context)
+                            folderViewModel.createFolder("Protected", context, isProtected = true)
                             val protList = folderViewModel.allFolders
                                 .filter { it.any { f -> f.folderName == "Protected" } }
                                 .first()

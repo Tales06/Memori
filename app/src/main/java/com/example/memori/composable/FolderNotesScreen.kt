@@ -210,16 +210,19 @@ fun FolderNotesScreen(
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
-                        IconButton(
-                            onClick = {
-                                showRenameFolderName = true
+                        if(folderName != "Protected") {
+
+                            IconButton(
+                                onClick = {
+                                    showRenameFolderName = true
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DriveFileRenameOutline,
+                                    contentDescription = "Rename Folder",
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DriveFileRenameOutline,
-                                contentDescription = "Rename Folder",
-                                tint = MaterialTheme.colorScheme.onBackground
-                            )
                         }
 
                     }

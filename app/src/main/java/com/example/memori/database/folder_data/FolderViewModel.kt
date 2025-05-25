@@ -27,35 +27,36 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel() {
     val allFolders: StateFlow<List<FolderEntity>> = repository.allFolders
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    fun createFolder(folderName: String, context: Context) = viewModelScope.launch {
+    fun createFolder(folderName: String, context: Context, isProtected: Boolean = false) =
+        viewModelScope.launch {
 
-        val userId = Firebase.auth.currentUser?.uid
+            val userId = Firebase.auth.currentUser?.uid
 
 
-        val folder = FolderEntity(
-            folderName = folderName,
-            userId = userId,
-            encryptedPin = context.getPinHash() ?: "",
-
+            val folder = FolderEntity(
+                folderName = folderName,
+                userId = userId,
+                encryptedPin = context.getPinHash() ?: "",
+                isProtected = isProtected,
             )
 
-        val existing = repository.getFolderByUuid(folder.folderUuid).firstOrNull()
-        if (existing == null) {
-            repository.insert(folder)
-        } else {
-            // If the folder already exists, you might want to update it instead
-            repository.insert(folder)
-        }
-
-
-        if (userId != null) {
-            viewModelScope.launch {
-                repoFireStore.uploadOneFolder(userId, folder)
+            val existing = repository.getFolderByUuid(folder.folderUuid).firstOrNull()
+            if (existing == null) {
+                repository.insert(folder)
+            } else {
+                // If the folder already exists, you might want to update it instead
+                repository.insert(folder)
             }
+
+
+            if (userId != null) {
+                viewModelScope.launch {
+                    repoFireStore.uploadOneFolder(userId, folder)
+                }
+            }
+
+
         }
-
-
-    }
 
     fun renameFolder(folderUuid: String, newName: String) = viewModelScope.launch {
 
@@ -83,23 +84,24 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel() {
         }
     }
 
-    fun syncAllFolders(userId: String, context: Context) {
-        viewModelScope.launch {
-            val localFolders = repository.allFolders.first()
-            repoFireStore.uploadFolder(userId, localFolders)
+    fun syncAllFolders(userId: String, context: Context) = viewModelScope.launch {
 
-            val cloudFolders = repoFireStore.getAllFoldersFromCloud(userId)
+        val localFolders = repository.allFolders.first()
+        repoFireStore.uploadFolder(userId, localFolders)
 
-            cloudFolders.forEach { folder ->
-                val localDb = repository.getFolderByUuid(folder.folderUuid).firstOrNull()
-                if (localDb == null) {
-                    repository.insert(folder)
-                    context.savePinHash(folder.encryptedPin)
-                } else if (folder.lastModified > localDb.lastModified) {
-                    repository.insert(folder)
-                }
+        val cloudFolders = repoFireStore.getAllFoldersFromCloud(userId)
+
+        cloudFolders.forEach { folder ->
+            val localDb = repository.getFolderByUuid(folder.folderUuid).firstOrNull()
+            if (localDb == null) {
+                repository.insert(folder)
+                context.savePinHash(folder.encryptedPin)
+            } else if (folder.lastModified > localDb.lastModified) {
+                context.savePinHash(folder.encryptedPin)
+                repository.insert(folder)
             }
         }
+
     }
 
 

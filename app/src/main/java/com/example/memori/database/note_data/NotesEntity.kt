@@ -9,15 +9,6 @@ import com.example.memori.database.folder_data.FolderEntity
 
 @Entity(
     tableName = "notes",
-    foreignKeys = [
-        ForeignKey(
-            entity = FolderEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["folderId"],
-            onDelete = ForeignKey.CASCADE
-        ),
-    ],
-    indices = [Index("folderId")],
 
 
 )
