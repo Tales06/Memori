@@ -51,6 +51,7 @@ fun FavoritesScreen(
     navController: NavController,
     noteViewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
+            context = LocalContext.current,
             repository = NotesRepository(
                 NoteDatabase.getDatabase(
                     context = LocalContext.current

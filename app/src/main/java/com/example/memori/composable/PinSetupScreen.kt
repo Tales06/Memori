@@ -58,6 +58,7 @@ fun PinSetupScreen(
     navController: NavController,
     folderViewModel: FolderViewModel = viewModel(
         factory = FolderViewModelFactory(
+            context = LocalContext.current,
             repository = FolderRepository(
                 NoteDatabase.getDatabase(LocalContext.current).folderDao()
             )

@@ -8,13 +8,20 @@
  */
 package com.example.memori.database.note_data
 
+import android.content.Context
+import android.net.ConnectivityManager
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.memori.preference.UserPreferences
 import com.example.memori.sync.FirestoreNoteRepository
+import com.example.memori.sync.NetworkStatusTracker
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -23,7 +30,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class NoteViewModel(private val repository: NotesRepository): ViewModel() {
+class NoteViewModel(private val repository: NotesRepository, private val context: Context): ViewModel() {
 
     /**
      * Repository instance for handling Firestore operations related to notes.
@@ -35,6 +42,10 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
      * This flow is eagerly started in the [viewModelScope] and initialized with an empty list.
      */
     private val repoFireStore = FirestoreNoteRepository()
+    val isCloudOnline = NetworkStatusTracker.isConnected
+
+    private val isSyncEnabled = UserPreferences.isSyncEnabled(context)
+
 
     val allNotes: StateFlow<List<NotesEntity>> = repository.allNotes
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -70,7 +81,9 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
 
         val userID = Firebase.auth.currentUser?.uid
 
-        if(userID != null){
+
+
+        if(userID != null && isSyncEnabled.first()){
             repoFireStore.insertOneNote(userID, note.copy(id = dbId.toInt()))
         }
     }
@@ -80,7 +93,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
 
         val userID = Firebase.auth.currentUser?.uid
 
-        if (userID != null) {
+        if (userID != null && isSyncEnabled.first()) {
             repoFireStore.deleteNote(userID, noteId)
 
         }
@@ -91,7 +104,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
 
         val userID = Firebase.auth.currentUser?.uid
 
-        if (userID != null) {
+        if (userID != null && isSyncEnabled.first()) {
             repoFireStore.uploadOneNote(userID, note)
         }
     }
@@ -117,7 +130,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
 
         val userID = Firebase.auth.currentUser?.uid
 
-        if (userID != null) {
+        if (userID != null && isSyncEnabled.first()) {
             val note = repository.getNoteById(noteId).firstOrNull()
             if (note != null) {
                 repoFireStore.uploadOneNote(userID, note)
@@ -130,7 +143,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         repository.unArchiveNote(noteId)
 
         val userID = Firebase.auth.currentUser?.uid
-        if (userID != null) {
+        if (userID != null && isSyncEnabled.first()) {
             val note = repository.getNoteById(noteId).firstOrNull()
             if (note != null) {
                 repoFireStore.uploadOneNote(userID, note)
@@ -143,7 +156,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         repository.moveNoteToFolder(noteId, folderId)
 
         val userID = Firebase.auth.currentUser?.uid
-        if (userID != null) {
+        if (userID != null && isSyncEnabled.first()) {
             val note = repository.getNoteById(noteId).firstOrNull()
             if (note != null) {
                 repoFireStore.uploadOneNote(userID, note)
@@ -160,7 +173,7 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
         repository.clearNoteFolder(noteId)
 
         val userID = Firebase.auth.currentUser?.uid
-        if (userID != null) {
+        if (userID != null && isSyncEnabled.first()) {
             val note = repository.getNoteById(noteId).firstOrNull()
             if (note != null) {
                 repoFireStore.uploadOneNote(userID, note)
@@ -193,6 +206,9 @@ class NoteViewModel(private val repository: NotesRepository): ViewModel() {
 
         }
     }
+
+
+
 
 
 }

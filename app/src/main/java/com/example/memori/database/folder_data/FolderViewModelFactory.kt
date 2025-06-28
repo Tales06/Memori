@@ -8,10 +8,11 @@
  */
 package com.example.memori.database.folder_data
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
-class FolderViewModelFactory(private val repository: FolderRepository) : ViewModelProvider.Factory {
+class FolderViewModelFactory(private val repository: FolderRepository, private val context: Context) : ViewModelProvider.Factory {
     /**
      * Creates a new instance of the specified [ViewModel] class.
      *
@@ -23,7 +24,7 @@ class FolderViewModelFactory(private val repository: FolderRepository) : ViewMod
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FolderViewModel::class.java)) {
-            return FolderViewModel(repository) as T
+            return FolderViewModel(repository, context) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

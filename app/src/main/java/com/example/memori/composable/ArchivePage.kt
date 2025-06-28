@@ -50,6 +50,7 @@ fun ArchivePage(
     navController: NavController,
     viewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
+            context = LocalContext.current,
             repository = NotesRepository(
                 NoteDatabase.getDatabase(LocalContext.current).noteDao()
             )
@@ -57,6 +58,7 @@ fun ArchivePage(
     ),
     folderViewModel: FolderViewModel = viewModel(
         factory = FolderViewModelFactory(
+            context = LocalContext.current,
             repository = FolderRepository(
                 NoteDatabase.getDatabase(context = LocalContext.current).folderDao()
             )

@@ -21,6 +21,7 @@
  */
 package com.example.memori.composable
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -47,6 +48,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.CreateNewFolder
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOff
@@ -98,18 +101,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.memori.database.NoteDatabase
 import com.example.memori.database.folder_data.FolderRepository
 import com.example.memori.database.folder_data.FolderViewModel
 import com.example.memori.database.folder_data.FolderViewModelFactory
-import com.example.memori.database.NoteDatabase
 import com.example.memori.database.note_data.NoteViewModel
 import com.example.memori.database.note_data.NoteViewModelFactory
 import com.example.memori.database.note_data.NotesEntity
 import com.example.memori.database.note_data.NotesRepository
 import com.example.memori.preference.PinPreferences.pinHashFlow
-
 import kotlinx.coroutines.launch
 import java.security.MessageDigest
+import androidx.core.content.edit
 
 val kaomoji: List<String> = listOf(
     "╥﹏╥)",
@@ -162,6 +165,7 @@ fun HomeScreen(
     // ViewModels for managing notes and folders, using factory injection for repositories.
     noteViewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
+            context = LocalContext.current,
             repository = NotesRepository(
                 NoteDatabase.getDatabase(context = LocalContext.current).noteDao()
             )
@@ -171,10 +175,11 @@ fun HomeScreen(
     // ViewModel for managing folders, using factory injection for the repository.
     folderViewModel: FolderViewModel = viewModel(
         factory = FolderViewModelFactory(
+            context = LocalContext.current,
             repository = FolderRepository(
                 NoteDatabase.getDatabase(context = LocalContext.current).folderDao()
             )
-        )
+        ),
     ),
 
     // Boolean flag indicating if the search bar is expanded.
@@ -227,6 +232,13 @@ fun HomeScreen(
     val currentRoute = backStackEntry?.destination?.route
 
     var selectedFolder by remember { mutableStateOf<Int?>(null) }
+
+    val cloudIsOnline by noteViewModel.isCloudOnline.collectAsState()
+
+    if (!cloudIsOnline) {
+        ToastOnce(context, message = "⚠️ You are currently offline. Some features may not be available.", key = "offline_warning")
+    }
+
 
 
     // Open the drawer when the Home screen is displayed.
@@ -579,32 +591,19 @@ fun HomeScreen(
 
                     )
                 } else {
+
+
                     SearchBarComponent(
                         navController = navController,
                         noteViewModel = noteViewModel,
                         modifier = Modifier.fillMaxWidth(),
                         expanded = searchExpanded,
                         onExpandedChange = onSearchExpanded,
-                        onNoteClick = { note ->
-                            if (selectionMode) {
-                                if (selectedNotes.contains(note)) {
-                                    selectedNotes.remove(note)
-                                    if (selectedNotes.isEmpty()) selectionMode = false
-                                } else {
-                                    selectedNotes.add(note)
-                                }
-                            } else {
-                                navController.navigate("modifiedNotes/${note.id}")
-                            }
-                        },
-                        onNoteLongPress = { note ->
-                            selectionMode = true
-                            selectedNotes.add(note)
-                        },
                         scope = scope,
                         drawerState = drawerState,
                     )
                 }
+
             }
         ) { innerPadding ->
             if (showDialogForMoveToAnotherFolder) {
@@ -781,6 +780,20 @@ fun HomeScreen(
         }
     }
 }
+
+@Composable
+fun ToastOnce(context: Context, message: String, key: String) {
+    val prefs = context.getSharedPreferences(key, Context.MODE_PRIVATE)
+    val alreadyShown = prefs.getBoolean(key, false)
+
+    LaunchedEffect(Unit) {
+        if (!alreadyShown) {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            prefs.edit { putBoolean("toast_shown", true) }
+        }
+    }
+}
+
 
 
 

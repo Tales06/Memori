@@ -57,6 +57,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -70,6 +72,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -107,6 +110,7 @@ fun SearchBarComponent(
     navController: NavController,
     noteViewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
+            context = LocalContext.current,
             repository = NotesRepository(
                 NoteDatabase.getDatabase(
                     context = LocalContext.current
@@ -117,8 +121,6 @@ fun SearchBarComponent(
     modifier: Modifier,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
-    onNoteClick: (NotesEntity) -> Unit,
-    onNoteLongPress: (NotesEntity) -> Unit,
     drawerState: DrawerState,
     scope: CoroutineScope
 ) {
@@ -139,7 +141,10 @@ fun SearchBarComponent(
         animationSpec = tween(durationMillis = 300), label = ""
     )
     val leadingIconForSearchBar = if (expanded) Icons.Filled.Close else Icons.Filled.Menu
+
+
     val listState = rememberLazyGridState()
+
 
     SearchBar(
         modifier = Modifier
@@ -174,8 +179,11 @@ fun SearchBarComponent(
                             }
                             .rotate(rotationAngle)
                     )
+
+
                 },
                 trailingIcon = {
+
                     // Show the delete icon only if there are selected notes
                     if (selectedNotesInSearch.isNotEmpty()) {
                         IconButton(

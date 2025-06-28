@@ -53,6 +53,7 @@ import androidx.navigation.navArgument
 import com.example.memori.MainActivity
 import com.example.memori.auth.SignInScreen
 import com.example.memori.auth.GoogleAuthClient
+import com.example.memori.auth.PrivacyInfo
 import com.example.memori.auth.SignInViewModel
 import com.example.memori.auth.SyncChoiceScreen
 import com.example.memori.composable.ArchivePage
@@ -174,6 +175,7 @@ fun MainNavigation(
 
     val noteViewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
+            context = context,
             repository = NotesRepository(
                 NoteDatabase.getDatabase(context).noteDao()
             )
@@ -182,6 +184,7 @@ fun MainNavigation(
 
     val folderViewModel: FolderViewModel = viewModel(
         factory = FolderViewModelFactory(
+            context = context,
             repository = FolderRepository(
                 NoteDatabase.getDatabase(context).folderDao()
             )
@@ -360,7 +363,7 @@ fun MainNavigation(
         }
         composable("setup_sync_choice") {
             SyncChoiceScreen(
-                onChooseSync = { navController.navigate("setup_google_login") },
+                onChooseSync = { navController.navigate("privacy_policy") },
                 onSkipSync = { navController.navigate("setup_complete") },
                 onBack = {
                     navController.navigate("choice_theme") {
@@ -477,7 +480,7 @@ fun MainNavigation(
                     }
                 },
                 onBack = {
-                    navController.navigate("setup_sync_choice") {
+                    navController.navigate("privacy_policy") {
                         popUpTo("setup_google_login") {
                             inclusive = true
                         }
@@ -611,6 +614,21 @@ fun MainNavigation(
                     folderName = folderName
                 )
             }
+        }
+
+        composable(
+            route = "privacy_policy",
+
+        ) {
+            PrivacyInfo(
+                onContinueClicked = {
+                    navController.navigate("setup_google_login") {
+                        popUpTo("privacy_policy") {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
 
 

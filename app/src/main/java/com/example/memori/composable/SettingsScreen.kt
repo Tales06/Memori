@@ -8,16 +8,36 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,23 +48,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.memori.auth.GoogleAuthClient
 import com.example.memori.auth.SignInState
 import com.example.memori.auth.SignInViewModel
 import com.example.memori.auth.UserData
+import com.example.memori.database.NoteDatabase
 import com.example.memori.database.folder_data.FolderRepository
 import com.example.memori.database.folder_data.FolderViewModel
 import com.example.memori.database.folder_data.FolderViewModelFactory
-import com.example.memori.database.NoteDatabase
 import com.example.memori.database.note_data.NoteViewModel
 import com.example.memori.database.note_data.NoteViewModelFactory
 import com.example.memori.database.note_data.NotesRepository
@@ -52,8 +69,6 @@ import com.example.memori.preference.ThemePreferences
 import com.example.memori.preference.UserPreferences
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -81,6 +96,7 @@ fun SettingsScreen(
     signInViewModel: SignInViewModel,
     viewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
+            context = context,
             repository = NotesRepository(
                 NoteDatabase.getDatabase(context).noteDao()
             )
@@ -88,6 +104,7 @@ fun SettingsScreen(
     ),
     folderViewModel: FolderViewModel = viewModel(
         factory = FolderViewModelFactory(
+            context = context,
             repository = FolderRepository(
                 NoteDatabase.getDatabase(context).folderDao()
             )
@@ -98,8 +115,6 @@ fun SettingsScreen(
 ) {
 
 
-
-
     val state by signInViewModel.state.collectAsStateWithLifecycle()
     val googleAuthClient by remember { mutableStateOf(GoogleAuthClient(context)) }
     val isLoading by signInViewModel.isLoading.collectAsStateWithLifecycle()
@@ -107,8 +122,19 @@ fun SettingsScreen(
 
     var showDialog by remember { mutableStateOf(false) }
 
+    var showDialogForConnection by remember { mutableStateOf(false) }
 
     val isSyncEnabled = UserPreferences.isSyncEnabled(context).collectAsState(initial = false).value
+
+    val cloudIsOnline by viewModel.isCloudOnline.collectAsState()
+
+
+    val leadingIconForNetwork = if (cloudIsOnline && isSyncEnabled) {
+        Icons.Outlined.CloudDone
+    } else {
+        Icons.Outlined.CloudOff
+    }
+
 
     /**
      * Remembers a launcher for the Google Sign-In activity result.
@@ -125,7 +151,7 @@ fun SettingsScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
         onResult = { res ->
-            if(res.resultCode == RESULT_OK) {
+            if (res.resultCode == RESULT_OK) {
                 scope.launch {
                     val signInRes = googleAuthClient.signInWithIntent(
                         res.data ?: return@launch
@@ -141,26 +167,8 @@ fun SettingsScreen(
     val iconForTheme = ThemePreferences.getTheme(context).collectAsState(initial = "SYSTEM").value
 
 
-    /**
-     * Observes changes to [state.isSignInSuccessful] using [LaunchedEffect].
-     * When sign-in is successful, waits for 1.5 seconds, then displays a "Login successful" toast message.
-     * Logs the value of [state.isSignInSuccessful] before and after the delay for debugging purposes.
-     *
-     * @param state The current state containing the sign-in status.
-     * @param context The context used to display the toast message.
-     */
-    LaunchedEffect(state.isSignInSuccessful) {
-        Log.e("Dentro al launchedeffect valore di isSignIn", state.isSignInSuccessful.toString())
-        if(state.isSignInSuccessful){
-            delay(1500)
-            Toast.makeText(
-                context,
-                "Login successful",
-                Toast.LENGTH_SHORT
-            ).show()
-            Log.e("Dentro al launchedeffect valore di isSignIn", state.isSignInSuccessful.toString())
-        }
-
+    if (state.isSignInSuccessful) {
+        ToastOnce(context, "Login successful", key = "login_successful")
     }
 
     Box(
@@ -190,7 +198,7 @@ fun SettingsScreen(
             }
 
 
-            if(isLoading){
+            if (isLoading) {
                 LoadingIndicator()
             }
 
@@ -210,15 +218,20 @@ fun SettingsScreen(
                 },
                 account = googleAuthClient.getSignedInUser(),
                 onSignIn = {
-                    signInViewModel.onSignInStart()
-                    launcher.launch(googleAuthClient.getSignInIntent())
+                    if (cloudIsOnline) {
+                        signInViewModel.onSignInStart()
+                        launcher.launch(googleAuthClient.getSignInIntent())
+                    } else {
+                        showDialogForConnection = true
+
+                    }
                 },
-                state = state
+                state = state,
             )
 
             SettingCard(
                 title = "Theme",
-                icon = when(iconForTheme) {
+                icon = when (iconForTheme) {
                     "SYSTEM" -> if (isSystemInDarkTheme()) Icons.Default.DarkMode else Icons.Default.LightMode
                     "LIGHT" -> Icons.Default.LightMode
                     "DARK" -> Icons.Default.DarkMode
@@ -236,12 +249,13 @@ fun SettingsScreen(
                 }
             )
 
+
             SettingCard(
                 title = "Synchronization",
                 icon = Icons.Default.CloudSync,
                 content = "Manage your notes in the cloud",
                 onClick = {
-                    if(state.isSignInSuccessful){
+                    if (state.isSignInSuccessful) {
 
                         showDialog = true
                     } else {
@@ -253,46 +267,87 @@ fun SettingsScreen(
                     }
                 }
             )
+            if (state.isSignInSuccessful) {
 
-            /**
-             * Displays a confirmation dialog for enabling or disabling synchronization.
-             *
-             * When `showDialog` is true, this dialog prompts the user to confirm their action regarding synchronization.
-             * - If the user confirms, it retrieves the current user's ID from Firebase Authentication.
-             * - Calls `syncAllFolders` on `folderViewModel` and `syncAllNotes` on `viewModel` to perform synchronization actions.
-             * - The dialog is dismissed after the action.
-             *
-             * @param showDialog Controls the visibility of the dialog.
-             * @param onDismissRequest Callback to handle dialog dismissal.
-             * @param onConfirmation Callback executed when the user confirms the action.
-             * @param dialogTitle The title displayed at the top of the dialog.
-             * @param dialogText The message shown in the dialog, which changes based on the synchronization state.
-             * @param icon The icon displayed in the dialog, representing synchronization.
-             */
-            if(showDialog){
-
-                GenericAlertDialog(
-                    onDismissRequest = { showDialog = false },
-                    onConfirmation = {
-                        val userID = Firebase.auth.currentUser?.uid ?: return@GenericAlertDialog
-                        folderViewModel.syncAllFolders(userID, context)
-                        viewModel.syncAllNotes(userID)
-                        showDialog = false
-
-                    },
-                    dialogTitle = "Synchronization",
-                    dialogText = if (isSyncEnabled) {
-                        "Are you sure you want to disable synchronization?"
-                    } else {
-                        "Do you want to enable synchronization?"
-                    },
-                    icon = Icons.Default.CloudSync
-
+                SettingCard(
+                    title = "Status Network",
+                    icon = leadingIconForNetwork,
+                    content = if (cloudIsOnline && isSyncEnabled) "Cloud is online" else "Cloud is offline",
                 )
             }
         }
+
+
+        /**
+         * Displays a confirmation dialog for enabling or disabling synchronization.
+         *
+         * When `showDialog` is true, this dialog prompts the user to confirm their action regarding synchronization.
+         * - If the user confirms, it retrieves the current user's ID from Firebase Authentication.
+         * - Calls `syncAllFolders` on `folderViewModel` and `syncAllNotes` on `viewModel` to perform synchronization actions.
+         * - The dialog is dismissed after the action.
+         *
+         * @param showDialog Controls the visibility of the dialog.
+         * @param onDismissRequest Callback to handle dialog dismissal.
+         * @param onConfirmation Callback executed when the user confirms the action.
+         * @param dialogTitle The title displayed at the top of the dialog.
+         * @param dialogText The message shown in the dialog, which changes based on the synchronization state.
+         * @param icon The icon displayed in the dialog, representing synchronization.
+         */
+        if (showDialog) {
+
+            GenericAlertDialog(
+                onDismissRequest = { showDialog = false },
+                onConfirmation = {
+                    val userID = Firebase.auth.currentUser?.uid ?: return@GenericAlertDialog
+
+                    if (isSyncEnabled) {
+                        // Disables synchronization
+                        scope.launch {
+
+                            UserPreferences.setSyncEnabled(context, false)
+                        }
+                    } else {
+                        // Enables synchronization
+                        folderViewModel.syncAllFolders(userID, context)
+                        viewModel.syncAllNotes(userID)
+                        scope.launch {
+
+                            UserPreferences.setSyncEnabled(context, true)
+                        }
+                    }
+                    showDialog = false
+                },
+                dialogTitle = "Synchronization",
+                dialogText = if (isSyncEnabled)
+                    "Are you sure you want to disable synchronization?"
+                else
+                    "Do you want to enable synchronization?",
+                icon = Icons.Default.CloudSync
+            )
+        }
+        if (showDialogForConnection) {
+            AlertDialog(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Warning Icon",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                onDismissRequest = { showDialogForConnection = false },
+                title = { Text("Connection Error") },
+                text = { Text("You need to be connected to the internet to perform this action.") },
+                confirmButton = {
+                    TextButton(onClick = { showDialogForConnection = false }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+
     }
 }
+
 
 /**
  * Displays a generic alert dialog with customizable title, text, icon, and actions.
@@ -360,8 +415,9 @@ fun SettingCard(
     title: String,
     icon: ImageVector,
     content: String,
-    onClick: () -> Unit
+    onClick: () -> Unit = {}
 ) {
+
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -374,13 +430,20 @@ fun SettingCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(imageVector = icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary)
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.primary
+            )
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = title, style = MaterialTheme.typography.titleMedium)
                 Text(text = content, style = MaterialTheme.typography.bodySmall, fontSize = 12.sp)
             }
-            TextButton(onClick = onClick) {
-                Text("Edit", color = MaterialTheme.colorScheme.primary)
+            if (title != "Status Network") {
+
+                TextButton(onClick = onClick) {
+                    Text("Edit", color = MaterialTheme.colorScheme.primary)
+                }
             }
         }
     }
@@ -403,10 +466,12 @@ fun ProfileScreen(
     account: UserData?,
     onSignOut: () -> Unit,
     onSignIn: () -> Unit,
-    state: SignInState
+    state: SignInState,
 ) {
 
     Log.e("Dentro al profilescreen valore di isSignIn", state.isSignInSuccessful.toString())
+
+
 
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -420,7 +485,7 @@ fun ProfileScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if(account?.profilePicture != null){
+            if (account?.profilePicture != null) {
                 AsyncImage(
                     model = account.profilePicture,
                     contentDescription = "Profile picture",
@@ -440,7 +505,7 @@ fun ProfileScreen(
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
-            if(account?.username != null){
+            if (account?.username != null) {
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
@@ -462,10 +527,10 @@ fun ProfileScreen(
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 elevation = ButtonDefaults.buttonElevation(6.dp)
-            ){
+            ) {
 
                 Text(
-                    text = if(state.isSignInSuccessful) "Logout" else "Login",
+                    text = if (state.isSignInSuccessful) "Logout" else "Login",
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 14.sp
 
@@ -473,4 +538,5 @@ fun ProfileScreen(
             }
         }
     }
+
 }

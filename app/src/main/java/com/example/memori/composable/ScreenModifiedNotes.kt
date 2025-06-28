@@ -121,6 +121,7 @@ fun ScreenModifiedNotes(
     navController: NavHostController,
     viewModel: NoteViewModel = viewModel(
         factory = NoteViewModelFactory(
+            context = LocalContext.current,
             repository = NotesRepository(
                 NoteDatabase.getDatabase(LocalContext.current).noteDao()
             )
@@ -128,6 +129,7 @@ fun ScreenModifiedNotes(
     ),
     folderViewModel: FolderViewModel = viewModel(
         factory = FolderViewModelFactory(
+            context = LocalContext.current,
             repository = FolderRepository(
                 NoteDatabase.getDatabase(LocalContext.current).folderDao()
             )

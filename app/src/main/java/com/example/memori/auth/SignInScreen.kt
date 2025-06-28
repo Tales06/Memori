@@ -14,8 +14,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.memori.R
 import com.example.memori.animation.AnimBackground
+import com.example.memori.database.NoteDatabase
+import com.example.memori.database.note_data.NoteViewModel
+import com.example.memori.database.note_data.NoteViewModelFactory
+import com.example.memori.database.note_data.NotesRepository
 
 /**
  * Composable function that displays the Sign-In screen.
@@ -32,12 +37,24 @@ fun SignInScreen(
     onLoggedIn: () -> Unit,
     onBack: () -> Unit,
     onSkip: () -> Unit,
+    noteViewModel: NoteViewModel = viewModel(
+        factory = NoteViewModelFactory(
+            context = LocalContext.current,
+            repository = NotesRepository(
+                NoteDatabase.getDatabase(context = LocalContext.current).noteDao()
+            )
+        )
+    )
 ) {
     // Retrieve the current context
     val context = LocalContext.current
 
     // Collect the state from the ViewModel
     val state by signInViewModel.state.collectAsStateWithLifecycle()
+
+    val isConnectionOn by noteViewModel.isCloudOnline.collectAsState()
+
+    var showConnectionDialog by remember { mutableStateOf(false) }
 
     // Show a toast message if there is an error
     LaunchedEffect(state.errorMessage) {
@@ -88,7 +105,13 @@ fun SignInScreen(
 
                     // Google login button
                     Button(
-                        onClick = onLoggedIn,
+                        onClick = {
+                            if (isConnectionOn) {
+                                onLoggedIn
+                            } else {
+                               showConnectionDialog = true
+                            }
+                        },
                         shape = RoundedCornerShape(50),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -138,5 +161,17 @@ fun SignInScreen(
                 }
             }
         }
+    }
+    if(showConnectionDialog) {
+        AlertDialog(
+            onDismissRequest = { showConnectionDialog = false },
+            title = { Text("Connection Error") },
+            text = { Text("Please check your internet connection and try again.") },
+            confirmButton = {
+                Button(onClick = { showConnectionDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }

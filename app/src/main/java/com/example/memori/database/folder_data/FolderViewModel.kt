@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.memori.preference.PinPreferences
 import com.example.memori.preference.PinPreferences.getPinHash
 import com.example.memori.preference.PinPreferences.savePinHash
+import com.example.memori.preference.UserPreferences
 import com.example.memori.sync.FirestoreFolderRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -18,10 +19,12 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class FolderViewModel(private val repository: FolderRepository) : ViewModel() {
+class FolderViewModel(private val repository: FolderRepository, private val context: Context) : ViewModel() {
 
     private val userId = Firebase.auth.currentUser?.uid
     private val repoFireStore = FirestoreFolderRepository()
+
+    private val isSyncEnabled = UserPreferences.isSyncEnabled(context)
 
 
     /**
@@ -63,7 +66,7 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel() {
             }
 
 
-            if (userId != null) {
+            if (userId != null && isSyncEnabled.first()) {
                 viewModelScope.launch {
                     repoFireStore.uploadOneFolder(userId, folder)
                 }
@@ -77,7 +80,7 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel() {
         val newLastModified = System.currentTimeMillis()
         repository.updateFolderName(folderUuid, newName, newLastModified)
         val userId = Firebase.auth.currentUser?.uid
-        if (userId != null) {
+        if (userId != null && isSyncEnabled.first()) {
             repoFireStore.renameFolder(userId, folderUuid, newName, newLastModified)
         }
 
@@ -92,7 +95,7 @@ class FolderViewModel(private val repository: FolderRepository) : ViewModel() {
         viewModelScope.launch {
             repository.deleteFolder(folderId)
             val userId = Firebase.auth.currentUser?.uid
-            if (userId != null) {
+            if (userId != null && isSyncEnabled.first()) {
                 repoFireStore.deleteFolder(userId, folderUuid)
             }
         }

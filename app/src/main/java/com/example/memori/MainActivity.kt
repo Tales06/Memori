@@ -34,9 +34,11 @@ import com.example.memori.database.theme_data.ThemeViewModelFactory
 import com.example.memori.preference.hasSeenSetup
 import com.example.memori.preference.setHasSeenSetup
 import com.example.memori.routes.MainNavigation
+import com.example.memori.sync.NetworkStatusTracker
 import com.example.memori.theme.MyMemoriTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 
 
 /**
@@ -74,6 +76,8 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NetworkStatusTracker.registerNetworkCallback(this)
+        resetToastShown(this, "offline_warning", "login_successful")
         setContent {
             val context = applicationContext
             val navController = rememberNavController()
@@ -120,6 +124,18 @@ class MainActivity : ComponentActivity() {
         }
 
     }
+    fun resetToastShown(context: Context, key1: String, key2: String) {
+        context.getSharedPreferences(key1, Context.MODE_PRIVATE)
+            .edit {
+                putBoolean(key1, false)
+            }
+        context.getSharedPreferences(key2, Context.MODE_PRIVATE)
+            .edit {
+                putBoolean(key2, false)
+            }
+    }
+
+
 
 }
 
